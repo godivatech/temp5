@@ -99,7 +99,7 @@ const Invoices = () => {
     <div className="flex h-screen bg-gray-100">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
+        <Header title="Invoices" />
         <main className="flex-1 overflow-y-auto p-4">
           <div className="max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-6">
