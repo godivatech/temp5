@@ -1,15 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
 import { getAllUsersAttendance, getUserAttendance, AttendanceRecord } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { DataTable } from '@/components/ui/data-table';
+import { Column } from '@/components/ui/data-table-types';
 import { toast } from 'sonner';
-import { Download, Search, Calendar } from 'lucide-react';
-import Header from '@/components/dashboard/Header';
-import Sidebar from '@/components/dashboard/Sidebar';
+import { Search, Calendar, Download } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Header } from '@/components/dashboard/Header';
+import { Sidebar } from '@/components/dashboard/Sidebar';
 import { DateRange } from 'react-day-picker';
 import { format, isWithinInterval, parseISO } from 'date-fns';
 import { 
@@ -54,7 +54,6 @@ const Attendance = () => {
     }
   };
 
-  // Calculate attendance percentage for each user
   const calculateAttendanceStats = () => {
     const userStats = new Map();
     
@@ -136,39 +135,45 @@ const Attendance = () => {
     record.userName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const attendanceColumns = [
+  const columns: Column<AttendanceRecord>[] = [
     {
-      accessorKey: 'date',
-      header: 'Date',
+      key: 'userName',
+      title: 'Employee Name',
+      accessorKey: 'userName'
     },
     {
-      accessorKey: 'userName',
-      header: 'Employee Name',
+      key: 'date',
+      title: 'Date',
+      accessorKey: 'date'
     },
     {
-      accessorKey: 'timeIn',
-      header: 'Time In',
+      key: 'timeIn',
+      title: 'Time In',
+      accessorKey: 'timeIn'
     },
     {
+      key: 'timeOut',
+      title: 'Time Out',
       accessorKey: 'timeOut',
-      header: 'Time Out',
       cell: ({ row }: { row: any }) => (
         <span>{row.original.timeOut || '-'}</span>
-      ),
+      )
     },
     {
+      key: 'status',
+      title: 'Status',
       accessorKey: 'status',
-      header: 'Status',
       cell: ({ row }: { row: any }) => (
-        <span className={`font-medium ${
-          row.original.status === 'present' ? 'text-green-500' : 
-          row.original.status === 'half-day' ? 'text-yellow-500' : 
-          row.original.status === 'late' ? 'text-orange-500' : 'text-red-500'
+        <span className={`px-2 py-1 rounded text-xs font-medium ${
+          row.original.status === 'present' ? 'bg-green-100 text-green-800' :
+          row.original.status === 'absent' ? 'bg-red-100 text-red-800' :
+          row.original.status === 'late' ? 'bg-yellow-100 text-yellow-800' :
+          'bg-gray-100 text-gray-800'
         }`}>
-          {row.original.status}
+          {row.original.status.charAt(0).toUpperCase() + row.original.status.slice(1)}
         </span>
-      ),
-    },
+      )
+    }
   ];
 
   const statsColumns = [
@@ -281,7 +286,7 @@ const Attendance = () => {
               </CardHeader>
               <CardContent>
                 <DataTable
-                  columns={attendanceColumns}
+                  columns={columns}
                   data={filteredRecords}
                   isLoading={isLoading}
                 />

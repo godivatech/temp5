@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { getUsers, updateUserRole, UserData, UserRole } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,8 +7,8 @@ import { Input } from '@/components/ui/input';
 import { DataTable } from '@/components/ui/data-table';
 import { toast } from 'sonner';
 import { Search, UserCog } from 'lucide-react';
-import Header from '@/components/dashboard/Header';
-import Sidebar from '@/components/dashboard/Sidebar';
+import { Header } from '@/components/dashboard/Header';
+import { Sidebar } from '@/components/dashboard/Sidebar';
 import {
   Select,
   SelectContent,
@@ -77,20 +76,24 @@ const UserManagement = () => {
 
   const columns = [
     {
+      key: 'displayName',
+      title: 'Name',
       accessorKey: 'displayName',
-      header: 'Name',
     },
     {
+      key: 'email',
+      title: 'Email',
       accessorKey: 'email',
-      header: 'Email',
     },
     {
+      key: 'phoneNumber',
+      title: 'Phone',
       accessorKey: 'phoneNumber',
-      header: 'Phone',
     },
     {
+      key: 'role',
+      title: 'Role',
       accessorKey: 'role',
-      header: 'Role',
       cell: ({ row }: { row: any }) => (
         <span className={`font-medium ${
           row.original.role === 'master_admin' ? 'text-red-500' : 
@@ -101,15 +104,17 @@ const UserManagement = () => {
       ),
     },
     {
+      key: 'createdAt',
+      title: 'Joined',
       accessorKey: 'createdAt',
-      header: 'Joined',
       cell: ({ row }: { row: any }) => (
         <span>{new Date(row.original.createdAt).toLocaleDateString()}</span>
       ),
     },
     {
+      key: 'actions',
+      title: 'Actions',
       id: 'actions',
-      header: 'Actions',
       cell: ({ row }: { row: any }) => (
         <div className="flex space-x-2">
           <Button

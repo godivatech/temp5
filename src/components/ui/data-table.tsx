@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   ChevronDown, 
@@ -12,26 +11,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-
-type Column<T> = {
-  key: keyof T | string;
-  title: string;
-  render?: (item: T) => React.ReactNode;
-  sortable?: boolean;
-};
-
-interface DataTableProps<T> {
-  data: T[];
-  columns: Column<T>[];
-  primaryKey: keyof T;
-  onRowClick?: (item: T) => void;
-  actions?: (item: T) => React.ReactNode;
-  searchable?: boolean;
-  isLoading?: boolean;
-  pagination?: boolean;
-  itemsPerPage?: number;
-  emptyMessage?: string;
-}
+import { Column, DataTableProps } from './data-table-types';
 
 export function DataTable<T>({
   data,
@@ -57,7 +37,6 @@ export function DataTable<T>({
   );
   const [showColumnSelector, setShowColumnSelector] = useState(false);
 
-  // Update filtered data when data or search term changes
   useEffect(() => {
     if (searchTerm.trim() === '') {
       setFilteredData([...data]);
@@ -80,12 +59,10 @@ export function DataTable<T>({
     }
   }, [data, searchTerm, columns]);
 
-  // Reset to first page when filtered data changes
   useEffect(() => {
     setCurrentPage(1);
   }, [filteredData]);
 
-  // Handle sorting
   const handleSort = (key: keyof T | string) => {
     let direction: 'asc' | 'desc' = 'asc';
     if (sortConfig && sortConfig.key === key) {
@@ -96,7 +73,6 @@ export function DataTable<T>({
     const sortedData = [...filteredData].sort((a, b) => {
       const keyStr = key.toString();
       
-      // For complex keys like "property.nested"
       if (keyStr.includes('.')) {
         const keys = keyStr.split('.');
         let aVal: any = a;
@@ -117,7 +93,6 @@ export function DataTable<T>({
         return 0;
       }
       
-      // For normal keys
       const aVal = a[key as keyof T];
       const bVal = b[key as keyof T];
       
@@ -135,7 +110,6 @@ export function DataTable<T>({
     setFilteredData(sortedData);
   };
 
-  // Pagination
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const paginatedData = pagination
     ? filteredData.slice(
@@ -144,7 +118,6 @@ export function DataTable<T>({
       )
     : filteredData;
 
-  // Column visibility toggle
   const toggleColumnVisibility = (key: string) => {
     const newVisibleColumns = new Set(visibleColumns);
     if (newVisibleColumns.has(key)) {
@@ -159,7 +132,6 @@ export function DataTable<T>({
 
   return (
     <div className="w-full animate-fade-in">
-      {/* Search and column selector */}
       {(searchable || columns.length > 1) && (
         <div className="flex flex-col sm:flex-row gap-2 mb-4 justify-between">
           {searchable && (
@@ -220,7 +192,6 @@ export function DataTable<T>({
         </div>
       )}
 
-      {/* Table */}
       <div className="relative overflow-x-auto rounded-lg border">
         <table className="w-full text-sm text-left">
           <thead className="bg-gray-50 text-gray-700 font-medium border-b">
@@ -321,7 +292,6 @@ export function DataTable<T>({
         </table>
       </div>
 
-      {/* Pagination */}
       {pagination && totalPages > 1 && (
         <div className="flex items-center justify-between mt-4">
           <div className="text-sm text-gray-500">

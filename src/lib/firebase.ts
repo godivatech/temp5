@@ -1,4 +1,3 @@
-
 import { initializeApp } from 'firebase/app';
 import { 
   getAuth, 
@@ -751,7 +750,7 @@ export const getAllUsersAttendance = async () => {
     // Check if user has permission
     const currentUser = await getCurrentUserData();
     
-    if (!currentUser || !['master_admin', 'admin'].includes(currentUser.role)) {
+    if (!currentUser || !['master_admin'].includes(currentUser.role)) {
       throw new Error("You don't have permission to view all attendance records");
     }
     
@@ -807,5 +806,6 @@ export const onAuthStateChange = (callback: (user: FirebaseUser | null) => void)
   return onAuthStateChanged(auth, callback);
 };
 
-// Export Firebase instances
-export { auth, database, ref, onValue, FirebaseUser as User };
+// Export Firebase instances - fixing the isolatedModules type export issue
+export { auth, database, ref, onValue };
+export type { FirebaseUser };

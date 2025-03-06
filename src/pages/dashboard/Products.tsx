@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Product, addProduct, getProducts, updateProduct, deleteProduct } from '@/lib/firebase';
@@ -10,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { Search, Plus, Edit, Trash } from 'lucide-react';
+import { Search, Plus, Edit, Trash, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -410,10 +409,14 @@ const Products = () => {
                   <Pagination>
                     <PaginationContent>
                       <PaginationItem>
-                        <PaginationPrevious 
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
                           onClick={() => paginate(Math.max(1, currentPage - 1))}
                           disabled={currentPage === 1}
-                        />
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
                       </PaginationItem>
                       
                       {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -431,12 +434,13 @@ const Products = () => {
                         if (pageNum <= totalPages && pageNum > 0) {
                           return (
                             <PaginationItem key={pageNum}>
-                              <PaginationLink 
+                              <Button 
+                                variant={pageNum === currentPage ? "default" : "outline"} 
+                                size="sm"
                                 onClick={() => paginate(pageNum)}
-                                isActive={pageNum === currentPage}
                               >
                                 {pageNum}
-                              </PaginationLink>
+                              </Button>
                             </PaginationItem>
                           );
                         }
@@ -444,10 +448,14 @@ const Products = () => {
                       })}
                       
                       <PaginationItem>
-                        <PaginationNext 
+                        <Button 
+                          variant="outline" 
+                          size="icon"
                           onClick={() => paginate(Math.min(totalPages, currentPage + 1))}
                           disabled={currentPage === totalPages}
-                        />
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
                       </PaginationItem>
                     </PaginationContent>
                   </Pagination>

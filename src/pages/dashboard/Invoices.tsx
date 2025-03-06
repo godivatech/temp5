@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { getInvoices, Invoice } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,8 +7,8 @@ import { Input } from '@/components/ui/input';
 import { DataTable } from '@/components/ui/data-table';
 import { toast } from 'sonner';
 import { Download, Search } from 'lucide-react';
-import Header from '@/components/dashboard/Header';
-import Sidebar from '@/components/dashboard/Sidebar';
+import { Header } from '@/components/dashboard/Header';
+import { Sidebar } from '@/components/dashboard/Sidebar';
 
 const Invoices = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -19,30 +18,35 @@ const Invoices = () => {
 
   const columns = [
     {
+      key: 'id',
+      title: 'Invoice ID',
       accessorKey: 'id',
-      header: 'Invoice ID',
     },
     {
+      key: 'customerName',
+      title: 'Customer',
       accessorKey: 'customerName',
-      header: 'Customer',
     },
     {
+      key: 'totalAmount',
+      title: 'Amount',
       accessorKey: 'totalAmount',
-      header: 'Amount',
       cell: ({ row }: { row: any }) => (
         <span>₹{row.original.totalAmount.toLocaleString()}</span>
       ),
     },
     {
+      key: 'createdAt',
+      title: 'Date',
       accessorKey: 'createdAt',
-      header: 'Date',
       cell: ({ row }: { row: any }) => (
         <span>{new Date(row.original.createdAt).toLocaleDateString()}</span>
       ),
     },
     {
+      key: 'actions',
+      title: 'Actions',
       id: 'actions',
-      header: 'Actions',
       cell: ({ row }: { row: any }) => (
         <div className="flex space-x-2">
           <Button 

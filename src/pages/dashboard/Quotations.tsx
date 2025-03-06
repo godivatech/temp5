@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -14,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { Search, Plus, Eye, Trash, FileText } from 'lucide-react';
+import { Search, Plus, Eye, Trash, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -521,10 +520,14 @@ const Quotations = () => {
                   <Pagination>
                     <PaginationContent>
                       <PaginationItem>
-                        <PaginationPrevious 
+                        <Button 
+                          variant="outline" 
+                          size="icon"
                           onClick={() => paginate(Math.max(1, currentPage - 1))}
                           disabled={currentPage === 1}
-                        />
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
                       </PaginationItem>
                       
                       {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -555,10 +558,14 @@ const Quotations = () => {
                       })}
                       
                       <PaginationItem>
-                        <PaginationNext 
+                        <Button 
+                          variant="outline" 
+                          size="icon"
                           onClick={() => paginate(Math.min(totalPages, currentPage + 1))}
                           disabled={currentPage === totalPages}
-                        />
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
                       </PaginationItem>
                     </PaginationContent>
                   </Pagination>

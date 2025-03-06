@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Customer, addCustomer, getCustomers, updateCustomer, deleteCustomer } from '@/lib/firebase';
@@ -13,6 +12,7 @@ import { toast } from 'sonner';
 import { Search, Plus, Edit, Trash, Eye } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const Customers = () => {
   const { userData } = useAuth();
@@ -341,10 +341,14 @@ const Customers = () => {
                   <Pagination>
                     <PaginationContent>
                       <PaginationItem>
-                        <PaginationPrevious 
+                        <Button 
+                          variant="outline" 
+                          size="icon"
                           onClick={() => paginate(Math.max(1, currentPage - 1))}
                           disabled={currentPage === 1}
-                        />
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
                       </PaginationItem>
                       
                       {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -375,10 +379,14 @@ const Customers = () => {
                       })}
                       
                       <PaginationItem>
-                        <PaginationNext 
+                        <Button 
+                          variant="outline" 
+                          size="icon"
                           onClick={() => paginate(Math.min(totalPages, currentPage + 1))}
                           disabled={currentPage === totalPages}
-                        />
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
                       </PaginationItem>
                     </PaginationContent>
                   </Pagination>
