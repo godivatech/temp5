@@ -7,7 +7,7 @@ import {
   signOut, 
   onAuthStateChanged,
   updateProfile,
-  User 
+  User as FirebaseUser
 } from 'firebase/auth';
 import { 
   getDatabase, 
@@ -25,13 +25,14 @@ import {
 } from 'firebase/database';
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  databaseURL: "YOUR_DATABASE_URL",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBo8D4pTG6oNGg4qy7V4AaC73qfAB0HRcc",
+  authDomain: "solar-energy-56bc8.firebaseapp.com",
+  databaseURL: "https://solar-energy-56bc8-default-rtdb.firebaseio.com",
+  projectId: "solar-energy-56bc8",
+  storageBucket: "solar-energy-56bc8.firebasestorage.app",
+  messagingSenderId: "833087081002",
+  appId: "1:833087081002:web:10001186150884d311d153",
+  measurementId: "G-2S9TJM6E3C"
 };
 
 // Initialize Firebase
@@ -802,9 +803,9 @@ export const getUsers = async () => {
 };
 
 // Setup auth listener
-export const onAuthStateChange = (callback: (user: User | null) => void) => {
+export const onAuthStateChange = (callback: (user: FirebaseUser | null) => void) => {
   return onAuthStateChanged(auth, callback);
 };
 
 // Export Firebase instances
-export { auth, database, ref, onValue };
+export { auth, database, ref, onValue, FirebaseUser as User };

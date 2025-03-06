@@ -88,7 +88,11 @@ const SignIn = () => {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button 
+              type="submit" 
+              className="w-full"
+              variant={isLoading ? "secondary" : "default"}
+            >
               {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
             <div className="text-center text-sm">
