@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { getAllUsersAttendance, getUserAttendance, AttendanceRecord } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -176,25 +177,29 @@ const Attendance = () => {
     }
   ];
 
-  const statsColumns = [
+  const statsColumns: Column<any>[] = [
     {
-      accessorKey: 'userName',
-      header: 'Employee Name',
+      key: 'userName',
+      title: 'Employee Name',
+      accessorKey: 'userName'
     },
     {
-      accessorKey: 'totalDays',
-      header: 'Total Days',
+      key: 'totalDays',
+      title: 'Total Days',
+      accessorKey: 'totalDays'
     },
     {
+      key: 'presentDays',
+      title: 'Present Days',
       accessorKey: 'presentDays',
-      header: 'Present Days',
       cell: ({ row }: { row: any }) => (
         <span>{row.original.presentDays.toFixed(1)}</span>
-      ),
+      )
     },
     {
+      key: 'percentage',
+      title: 'Attendance %',
       accessorKey: 'percentage',
-      header: 'Attendance %',
       cell: ({ row }: { row: any }) => (
         <span className={`font-medium ${
           row.original.percentage >= 90 ? 'text-green-500' : 
@@ -202,8 +207,8 @@ const Attendance = () => {
         }`}>
           {row.original.percentage.toFixed(2)}%
         </span>
-      ),
-    },
+      )
+    }
   ];
 
   return (

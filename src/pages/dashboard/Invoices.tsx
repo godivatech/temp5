@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { getInvoices, Invoice } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -5,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { DataTable } from '@/components/ui/data-table';
+import { Column } from '@/components/ui/data-table-types';
 import { toast } from 'sonner';
 import { Download, Search } from 'lucide-react';
 import { Header } from '@/components/dashboard/Header';
@@ -16,7 +18,7 @@ const Invoices = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { userData } = useAuth();
 
-  const columns = [
+  const columns: Column<Invoice>[] = [
     {
       key: 'id',
       title: 'Invoice ID',

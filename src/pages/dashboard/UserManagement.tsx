@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { DataTable } from '@/components/ui/data-table';
+import { Column } from '@/components/ui/data-table-types';
 import { toast } from 'sonner';
 import { Search, UserCog } from 'lucide-react';
 import { Header } from '@/components/dashboard/Header';
@@ -58,7 +59,6 @@ const UserManagement = () => {
       await updateUserRole(selectedUser.uid, newRole);
       toast.success(`${selectedUser.displayName}'s role updated to ${newRole}`);
       setIsEditDialogOpen(false);
-      // Update local state
       setUsers(users.map(user => 
         user.uid === selectedUser.uid ? { ...user, role: newRole } : user
       ));
@@ -74,7 +74,7 @@ const UserManagement = () => {
     setIsEditDialogOpen(true);
   };
 
-  const columns = [
+  const columns: Column<UserData>[] = [
     {
       key: 'displayName',
       title: 'Name',

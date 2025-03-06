@@ -1,7 +1,6 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { 
-  User, 
+  FirebaseUser, 
   onAuthStateChange, 
   getCurrentUserData, 
   UserData, 
@@ -15,7 +14,7 @@ import {
 import { toast } from 'sonner';
 
 type AuthContextType = {
-  currentUser: User | null;
+  currentUser: FirebaseUser | null;
   userData: UserData | null;
   isLoading: boolean;
   isAuthenticated: boolean;
@@ -31,7 +30,7 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
