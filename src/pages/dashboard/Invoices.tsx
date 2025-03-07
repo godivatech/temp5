@@ -129,9 +129,11 @@ const Invoices = () => {
     try {
       setIsLoading(true);
       const data = await getInvoices();
-      // Add default status to invoices that don't have one
+      // Add default values for all required fields to prevent undefined errors
       const processedData = data.map(invoice => ({
         ...invoice,
+        customerName: invoice.customerName || 'Unknown Customer',
+        totalAmount: invoice.totalAmount || 0,
         status: invoice.status || 'pending'
       }));
       setInvoices(processedData);
@@ -165,10 +167,10 @@ const Invoices = () => {
 
   const getFilteredInvoices = () => {
     return invoices.filter((invoice) => {
-      // Filter by search term
+      // Filter by search term with null checks to prevent undefined errors
       const matchesSearch = 
-        invoice.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        invoice.id?.toLowerCase().includes(searchTerm.toLowerCase());
+        (invoice.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+        (invoice.id?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
       
       // Filter by status
       const matchesStatus = !statusFilter || invoice.status === statusFilter;

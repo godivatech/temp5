@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
@@ -127,11 +126,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
     ));
   };
 
-  // Sidebar for desktop
   const desktopSidebar = (
     <aside
       className={cn(
-        'h-screen bg-white border-r border-gray-200 transition-all duration-300 ease-in-out relative',
+        'h-screen bg-white border-r border-gray-200 transition-all duration-300 ease-in-out sticky top-0 left-0 z-30',
         isExpanded ? 'w-64' : 'w-16'
       )}
     >
@@ -215,7 +213,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
     </aside>
   );
 
-  // Sidebar for mobile
   const mobileSidebar = (
     <>
       <button

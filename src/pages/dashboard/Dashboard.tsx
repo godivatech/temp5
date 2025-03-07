@@ -1,194 +1,95 @@
 
-import { useState, useEffect } from 'react';
+import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { markAttendance, getCustomers, getProducts, getQuotations } from '@/lib/firebase';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { UserCog, Users, Package, FileText, Clock } from 'lucide-react';
-import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Header } from '@/components/dashboard/Header';
+import { Sidebar } from '@/components/dashboard/Sidebar';
+import { Users, Package, FileText, FileInput, TrendingUp } from 'lucide-react';
 
 const Dashboard = () => {
   const { userData } = useAuth();
-  const [customerCount, setCustomerCount] = useState(0);
-  const [productCount, setProductCount] = useState(0);
-  const [quotationCount, setQuotationCount] = useState(0);
-  const [isAttendanceMarked, setIsAttendanceMarked] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        const customers = await getCustomers();
-        const products = await getProducts();
-        const quotations = await getQuotations();
-        
-        setCustomerCount(customers.length);
-        setProductCount(products.length);
-        setQuotationCount(quotations.length);
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        toast.error('Failed to load dashboard data');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  const handleMarkAttendance = async () => {
-    try {
-      await markAttendance();
-      setIsAttendanceMarked(true);
-      toast.success('Attendance marked successfully');
-    } catch (error) {
-      console.error('Error marking attendance:', error);
-      toast.error('Failed to mark attendance');
+  const statCards = [
+    {
+      title: 'Total Customers',
+      value: '234',
+      icon: <Users className="h-8 w-8 text-primary" />,
+      description: '12% increase from last month'
+    },
+    {
+      title: 'Total Products',
+      value: '52',
+      icon: <Package className="h-8 w-8 text-primary" />,
+      description: '5 new products added this week'
+    },
+    {
+      title: 'Quotations',
+      value: '158',
+      icon: <FileText className="h-8 w-8 text-primary" />,
+      description: '23 sent this month'
+    },
+    {
+      title: 'Invoices',
+      value: '92',
+      icon: <FileInput className="h-8 w-8 text-primary" />,
+      description: '₹1.2M revenue generated'
     }
-  };
+  ];
 
   return (
-    <div className="p-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-gray-500">Welcome back, {userData?.displayName || 'User'}</p>
-        </div>
-        <Button 
-          onClick={handleMarkAttendance} 
-          className="mt-4 md:mt-0"
-          disabled={isAttendanceMarked}
-        >
-          <Clock className="mr-2 h-4 w-4" />
-          {isAttendanceMarked ? 'Attendance Marked' : 'Mark Attendance'}
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{isLoading ? '...' : customerCount}</div>
-            <p className="text-xs text-muted-foreground pt-1">
-              <Button variant="link" className="p-0 h-auto text-xs" onClick={() => navigate('/dashboard/customers')}>
-                View all customers
-              </Button>
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{isLoading ? '...' : productCount}</div>
-            <p className="text-xs text-muted-foreground pt-1">
-              <Button variant="link" className="p-0 h-auto text-xs" onClick={() => navigate('/dashboard/products')}>
-                View all products
-              </Button>
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Quotations</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{isLoading ? '...' : quotationCount}</div>
-            <p className="text-xs text-muted-foreground pt-1">
-              <Button variant="link" className="p-0 h-auto text-xs" onClick={() => navigate('/dashboard/quotations')}>
-                View all quotations
-              </Button>
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Account Type</CardTitle>
-            <UserCog className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold capitalize">{userData?.role || 'Employee'}</div>
-            <p className="text-xs text-muted-foreground pt-1">
-              Role-based access
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="col-span-1 lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Frequently used actions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Button className="justify-start" variant="outline" onClick={() => navigate('/dashboard/customers')}>
-                <Users className="mr-2 h-4 w-4" />
-                Add New Customer
-              </Button>
-              <Button className="justify-start" variant="outline" onClick={() => navigate('/dashboard/products')}>
-                <Package className="mr-2 h-4 w-4" />
-                Add New Product
-              </Button>
-              <Button className="justify-start" variant="outline" onClick={() => navigate('/dashboard/quotations')}>
-                <FileText className="mr-2 h-4 w-4" />
-                Create Quotation
-              </Button>
-              <Button className="justify-start" variant="outline" onClick={() => navigate('/dashboard/invoices')}>
-                <FileText className="mr-2 h-4 w-4" />
-                Generate Invoice
-              </Button>
+    <div className="flex h-screen bg-gray-100">
+      <Sidebar />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header title="Dashboard" />
+        <main className="flex-1 overflow-y-auto p-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-6">
+              <h1 className="text-2xl font-bold">Welcome, {userData?.displayName || 'User'}</h1>
+              <p className="text-gray-500">Here's what's happening with your business today</p>
             </div>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>System Information</CardTitle>
-            <CardDescription>Solar Panel Management</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="about">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="about">About</TabsTrigger>
-                <TabsTrigger value="help">Help</TabsTrigger>
-              </TabsList>
-              <TabsContent value="about" className="space-y-4 mt-4">
-                <p className="text-sm">
-                  Prakash Green Energy Dashboard provides comprehensive tools for solar panel business management.
-                </p>
-                <p className="text-sm">
-                  Version: 1.0.0
-                </p>
-              </TabsContent>
-              <TabsContent value="help" className="space-y-4 mt-4">
-                <p className="text-sm">
-                  Need assistance? Contact our support team:
-                </p>
-                <p className="text-sm">
-                  Email: support@prakashgreenenergy.com
-                </p>
-                <p className="text-sm">
-                  Phone: +91-XXXXXXXXXX
-                </p>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              {statCards.map((card, index) => (
+                <Card key={index} className="shadow-sm hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+                    <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
+                    {card.icon}
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{card.value}</div>
+                    <p className="text-xs text-gray-500">{card.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg">Recent Sales</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64 flex items-center justify-center border rounded-md">
+                    <TrendingUp className="h-12 w-12 text-gray-300 mr-2" />
+                    <span className="text-gray-500">Sales chart will be displayed here</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg">Top Products</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64 flex items-center justify-center border rounded-md">
+                    <Package className="h-12 w-12 text-gray-300 mr-2" />
+                    <span className="text-gray-500">Product stats will be displayed here</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </main>
       </div>
     </div>
   );
