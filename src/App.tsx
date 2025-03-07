@@ -1,12 +1,12 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { initializeApp } from "firebase/app";
+import { Sidebar } from "@/components/dashboard/Sidebar";
 
 // Pages
 import Index from "./pages/Index";
@@ -25,11 +25,24 @@ import Attendance from "./pages/dashboard/Attendance";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RoleRoute from "./components/RoleRoute";
 
+// Create a consistent layout for dashboard pages
+const DashboardLayout = () => {
+  return (
+    <div className="flex h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
+      <Sidebar />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Outlet />
+      </div>
+    </div>
+  );
+};
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
       staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false,
     },
   },
 });
@@ -103,51 +116,29 @@ const App = () => {
               
               <Route path="/dashboard" element={
                 <ProtectedRoute>
-                  <Dashboard />
+                  <DashboardLayout />
                 </ProtectedRoute>
-              } />
-              
-              <Route path="/dashboard/customers" element={
-                <ProtectedRoute>
-                  <Customers />
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/dashboard/products" element={
-                <ProtectedRoute>
-                  <Products />
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/dashboard/quotations" element={
-                <ProtectedRoute>
-                  <Quotations />
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/dashboard/invoices" element={
-                <ProtectedRoute>
+              }>
+                <Route index element={<Dashboard />} />
+                <Route path="customers" element={<Customers />} />
+                <Route path="products" element={<Products />} />
+                <Route path="quotations" element={<Quotations />} />
+                <Route path="invoices" element={
                   <RoleRoute allowedRoles={['master_admin', 'admin']}>
                     <Invoices />
                   </RoleRoute>
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/dashboard/users" element={
-                <ProtectedRoute>
+                } />
+                <Route path="users" element={
                   <RoleRoute allowedRoles={['master_admin']}>
                     <UserManagement />
                   </RoleRoute>
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/dashboard/attendance" element={
-                <ProtectedRoute>
+                } />
+                <Route path="attendance" element={
                   <RoleRoute allowedRoles={['master_admin', 'admin']}>
                     <Attendance />
                   </RoleRoute>
-                </ProtectedRoute>
-              } />
+                } />
+              </Route>
               
               <Route path="*" element={<NotFound />} />
             </Routes>
