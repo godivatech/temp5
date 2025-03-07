@@ -129,7 +129,12 @@ const Invoices = () => {
     try {
       setIsLoading(true);
       const data = await getInvoices();
-      setInvoices(data);
+      // Add default status to invoices that don't have one
+      const processedData = data.map(invoice => ({
+        ...invoice,
+        status: invoice.status || 'pending'
+      }));
+      setInvoices(processedData);
     } catch (error: any) {
       console.error('Error fetching invoices:', error);
       toast.error(error.message || 'Failed to fetch invoices');

@@ -111,6 +111,7 @@ export interface Invoice {
   createdAt: number;
   createdBy: string;
   pdfUrl?: string;
+  status?: 'paid' | 'pending' | 'overdue' | 'draft';
 }
 
 // Attendance type
@@ -809,3 +810,4 @@ export const onAuthStateChange = (callback: (user: FirebaseUser | null) => void)
 // Export Firebase instances - fixing the isolatedModules type export issue
 export { auth, database, ref, onValue };
 export type { FirebaseUser };
+
