@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Bell, Search, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,13 +19,23 @@ export const Header: React.FC<HeaderProps> = ({
   actions 
 }) => {
   const { userData } = useAuth();
+  const [isMarkingAttendance, setIsMarkingAttendance] = useState(false);
 
   const handleMarkAttendance = async () => {
     try {
+      setIsMarkingAttendance(true);
       await markAttendance();
       toast.success('Attendance marked successfully');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to mark attendance');
+      console.error("Error marking attendance:", error);
+      // Handle the specific error case for the indexOn rule
+      if (error.message && error.message.includes("Index not defined, add \".indexOn\": \"userId\"")) {
+        toast.error('Firebase database index not configured. Please contact administrator.');
+      } else {
+        toast.error(error.message || 'Failed to mark attendance');
+      }
+    } finally {
+      setIsMarkingAttendance(false);
     }
   };
 
@@ -42,11 +52,12 @@ export const Header: React.FC<HeaderProps> = ({
             variant="outline"
             size="sm"
             onClick={handleMarkAttendance}
+            disabled={isMarkingAttendance}
             className="flex items-center gap-1 text-xs sm:text-sm"
           >
             <PlusCircle className="h-4 w-4" />
-            <span className="hidden sm:inline">Mark Attendance</span>
-            <span className="sm:hidden">Attendance</span>
+            <span className="hidden sm:inline">{isMarkingAttendance ? 'Processing...' : 'Mark Attendance'}</span>
+            <span className="sm:hidden">{isMarkingAttendance ? 'Loading' : 'Attendance'}</span>
           </Button>
           
           {actions}

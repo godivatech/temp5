@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -6,7 +7,7 @@ import {
   updateQuotation, deleteQuotation
 } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
@@ -361,7 +362,7 @@ const Quotations = () => {
                                   <SelectContent>
                                     {products.map(product => (
                                       <SelectItem key={product.id} value={product.id || ''}>
-                                        {product.name} - {product.price.toLocaleString('en-IN')} ₹ ({product.quantity} {product.unit}s available)
+                                        {product.name} - {(product.price || 0).toLocaleString('en-IN')} ₹ ({product.quantity} {product.unit}s available)
                                       </SelectItem>
                                     ))}
                                   </SelectContent>
@@ -395,9 +396,9 @@ const Quotations = () => {
                                     {quotationItems.map((item, index) => (
                                       <TableRow key={index}>
                                         <TableCell>{item.productName}</TableCell>
-                                        <TableCell>₹{item.unitPrice.toLocaleString('en-IN')}</TableCell>
+                                        <TableCell>₹{(item.unitPrice || 0).toLocaleString('en-IN')}</TableCell>
                                         <TableCell>{item.quantity} {item.unit}</TableCell>
-                                        <TableCell>₹{item.totalPrice.toLocaleString('en-IN')}</TableCell>
+                                        <TableCell>₹{(item.totalPrice || 0).toLocaleString('en-IN')}</TableCell>
                                         <TableCell>
                                           <Button 
                                             variant="ghost" 
@@ -574,5 +575,121 @@ const Quotations = () => {
                                 size="icon"
                                 onClick={() => paginate(Math.min(totalPages, currentPage + 1))}
                                 disabled={currentPage === totalPages}
-                             
+                              >
+                                <ChevronRight className="h-4 w-4" />
+                              </Button>
+                            </PaginationItem>
+                          </PaginationContent>
+                        </Pagination>
+                      </div>
+                    )}
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </div>
 
+      {/* View Quotation Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Quotation Details</DialogTitle>
+          </DialogHeader>
+          
+          {selectedQuotation && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-sm font-medium mb-1">Customer</h3>
+                  <p className="text-gray-700">{selectedQuotation.customerName}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium mb-1">Status</h3>
+                  <Badge className={`${statusColors[selectedQuotation.status || 'draft']} hover:${statusColors[selectedQuotation.status || 'draft']}`}>
+                    {(selectedQuotation.status || 'Draft').charAt(0).toUpperCase() + (selectedQuotation.status || 'draft').slice(1)}
+                  </Badge>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium mb-1">Created On</h3>
+                  <p className="text-gray-700">{new Date(selectedQuotation.createdAt).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium mb-1">Total Amount</h3>
+                  <p className="text-gray-700 font-semibold">₹{(selectedQuotation.totalAmount || 0).toLocaleString('en-IN')}</p>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-medium mb-2">Items</h3>
+                <div className="border rounded-md overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Product</TableHead>
+                        <TableHead>Unit Price</TableHead>
+                        <TableHead>Quantity</TableHead>
+                        <TableHead>Total</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {selectedQuotation.items?.map((item, index) => (
+                        <TableRow key={index}>
+                          <TableCell>{item.productName}</TableCell>
+                          <TableCell>₹{(item.unitPrice || 0).toLocaleString('en-IN')}</TableCell>
+                          <TableCell>{item.quantity} {item.unit}</TableCell>
+                          <TableCell>₹{(item.totalPrice || 0).toLocaleString('en-IN')}</TableCell>
+                        </TableRow>
+                      ))}
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-right font-medium">Total Amount:</TableCell>
+                        <TableCell className="font-bold">₹{(selectedQuotation.totalAmount || 0).toLocaleString('en-IN')}</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Change Status Dialog */}
+      <Dialog open={isEditStatusDialogOpen} onOpenChange={setIsEditStatusDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Quotation Status</DialogTitle>
+            <DialogDescription>
+              Change the status of this quotation.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select value={selectedStatus} onValueChange={(value) => setSelectedStatus(value as any)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="sent">Sent</SelectItem>
+                  <SelectItem value="accepted">Accepted</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditStatusDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleUpdateStatus}>Update Status</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default Quotations;

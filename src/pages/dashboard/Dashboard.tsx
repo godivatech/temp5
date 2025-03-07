@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Header } from '@/components/dashboard/Header';
 import { Sidebar } from '@/components/dashboard/Sidebar';
-import { Users, Package, FileText, FileInput, TrendingUp } from 'lucide-react';
+import { Users, Package, FileText, FileInput, TrendingUp, BarChart2 } from 'lucide-react';
 
 const Dashboard = () => {
   const { userData } = useAuth();
@@ -82,7 +82,7 @@ const Dashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="h-64 flex items-center justify-center border rounded-md">
-                    <Package className="h-12 w-12 text-gray-300 mr-2" />
+                    <BarChart2 className="h-12 w-12 text-gray-300 mr-2" />
                     <span className="text-gray-500">Product stats will be displayed here</span>
                   </div>
                 </CardContent>
