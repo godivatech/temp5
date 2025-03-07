@@ -105,15 +105,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         to={item.path}
         className={({ isActive }) =>
           cn(
-            'sidebar-item group',
-            isActive && 'active'
+            'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+            isActive 
+              ? 'bg-primary/10 text-primary' 
+              : 'text-gray-600 hover:text-primary hover:bg-primary/5',
+            !isExpanded && !isMobile && 'justify-center px-2'
           )
         }
         onClick={isMobile ? () => setIsMobileExpanded(false) : undefined}
       >
         <item.icon
           className={cn(
-            'h-5 w-5 shrink-0 transition-transform group-hover:scale-110'
+            'h-5 w-5 shrink-0 transition-transform',
+            !isExpanded && !isMobile && 'h-6 w-6'
           )}
         />
         {(isExpanded || (isMobile && isMobileExpanded)) && (
@@ -127,7 +131,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   const desktopSidebar = (
     <aside
       className={cn(
-        'h-screen bg-white border-r border-gray-200 transition-all duration-300 relative',
+        'h-screen bg-white border-r border-gray-200 transition-all duration-300 ease-in-out relative',
         isExpanded ? 'w-64' : 'w-16'
       )}
     >
@@ -144,13 +148,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
           )}
         </div>
 
-        <div className="flex-1 overflow-auto py-2 px-3">
-          <nav className="flex flex-col gap-1">
+        <div className="flex-1 overflow-auto py-4 px-3">
+          <nav className="flex flex-col gap-1.5">
             {renderNavItems(mainNavItems)}
 
             {(hasRole(['master_admin']) || hasRole(['admin'])) && (
               <>
-                <div className="my-2 border-t border-gray-200" />
+                <div className="my-3 border-t border-gray-200 mx-2" />
+                <p className={cn("text-xs text-gray-500 font-medium mb-2 px-3", !isExpanded && "sr-only")}>
+                  Administration
+                </p>
                 {renderNavItems(adminNavItems)}
               </>
             )}
@@ -159,39 +166,49 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
 
         <div className="sticky inset-x-0 bottom-0 border-t border-gray-200 bg-white p-3">
           <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-3 rounded-md py-2">
-              {isExpanded && (
-                <>
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-                      <span className="text-sm font-medium">
-                        {userData?.displayName?.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium">{userData?.displayName}</span>
-                      <span className="text-xs text-gray-500 capitalize">
-                        {userData?.role.replace('_', ' ')}
-                      </span>
-                    </div>
+            {isExpanded && (
+              <div className="flex items-center gap-3 rounded-md py-2">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                    <span className="text-sm font-medium">
+                      {userData?.displayName?.charAt(0).toUpperCase()}
+                    </span>
                   </div>
-                </>
-              )}
-              <button
-                className="ml-auto flex h-8 w-8 items-center justify-center rounded-md hover:bg-gray-100"
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium truncate max-w-[140px]">{userData?.displayName}</span>
+                    <span className="text-xs text-gray-500 capitalize">
+                      {userData?.role.replace('_', ' ')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleLogout} 
+                className={cn(
+                  "gap-2 transition-all",
+                  !isExpanded && "w-10 p-0 justify-center"
+                )}
+              >
+                <LogOut className="h-4 w-4" />
+                {isExpanded && <span>Logout</span>}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={toggleSidebar}
+                className="w-10 p-0 justify-center flex-shrink-0"
               >
                 {isExpanded ? (
-                  <ChevronLeft className="h-5 w-5" />
+                  <ChevronLeft className="h-4 w-4" />
                 ) : (
-                  <ChevronRight className="h-5 w-5" />
+                  <ChevronRight className="h-4 w-4" />
                 )}
-              </button>
+              </Button>
             </div>
-            <Button variant="outline" size="sm" onClick={handleLogout} className="w-full gap-2">
-              <LogOut className="h-4 w-4" />
-              {isExpanded && <span>Logout</span>}
-            </Button>
           </div>
         </div>
       </div>
@@ -218,7 +235,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
 
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 h-screen w-64 bg-white border-r border-gray-200 shadow-xl transition-transform duration-300',
+          'fixed inset-y-0 left-0 z-50 h-screen w-72 bg-white border-r border-gray-200 shadow-xl transition-transform duration-300 ease-in-out',
           isMobileExpanded ? 'translate-x-0' : '-translate-x-full'
         )}
       >
@@ -233,13 +250,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
             </button>
           </div>
 
-          <div className="flex-1 overflow-auto py-2 px-3">
-            <nav className="flex flex-col gap-1">
+          <div className="flex-1 overflow-auto py-4 px-3">
+            <nav className="flex flex-col gap-1.5">
               {renderNavItems(mainNavItems)}
 
               {(hasRole(['master_admin']) || hasRole(['admin'])) && (
                 <>
-                  <div className="my-2 border-t border-gray-200" />
+                  <div className="my-3 border-t border-gray-200 mx-2" />
+                  <p className="text-xs text-gray-500 font-medium mb-2 px-3">
+                    Administration
+                  </p>
                   {renderNavItems(adminNavItems)}
                 </>
               )}
@@ -250,7 +270,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-3 rounded-md py-2">
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                  <div className="h-9 w-9 rounded-full bg-primary/10 text-primary flex items-center justify-center">
                     <span className="text-sm font-medium">
                       {userData?.displayName?.charAt(0).toUpperCase()}
                     </span>
