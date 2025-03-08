@@ -9,8 +9,7 @@ import { DataTable } from '@/components/ui/data-table';
 import { Column } from '@/components/ui/data-table-types';
 import { toast } from 'sonner';
 import { Download, Search } from 'lucide-react';
-import { Header } from '@/components/dashboard/Header';
-import { Sidebar } from '@/components/dashboard/Sidebar';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 
 const Invoices = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -34,7 +33,7 @@ const Invoices = () => {
       title: 'Amount',
       accessorKey: 'totalAmount',
       cell: ({ row }: { row: any }) => (
-        <span>₹{row.original.totalAmount.toLocaleString()}</span>
+        <span>₹{row.original.totalAmount?.toLocaleString() || '0'}</span>
       ),
     },
     {
@@ -42,7 +41,7 @@ const Invoices = () => {
       title: 'Date',
       accessorKey: 'createdAt',
       cell: ({ row }: { row: any }) => (
-        <span>{new Date(row.original.createdAt).toLocaleDateString()}</span>
+        <span>{row.original.createdAt ? new Date(row.original.createdAt).toLocaleDateString() : 'N/A'}</span>
       ),
     },
     {
@@ -91,46 +90,40 @@ const Invoices = () => {
   };
 
   const filteredInvoices = invoices.filter((invoice) =>
-    invoice.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    invoice.id?.toLowerCase().includes(searchTerm.toLowerCase())
+    (invoice.customerName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (invoice.id?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Invoices" />
-        <main className="flex-1 overflow-y-auto p-4">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold">Invoices</h1>
-              <div className="relative w-64">
-                <Input
-                  placeholder="Search invoices..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-              </div>
-            </div>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle>All Invoices</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <DataTable
-                  columns={columns}
-                  data={filteredInvoices}
-                  isLoading={isLoading}
-                />
-              </CardContent>
-            </Card>
+    <DashboardLayout title="Invoices">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Invoices</h1>
+          <div className="relative w-64">
+            <Input
+              placeholder="Search invoices..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
           </div>
-        </main>
+        </div>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle>All Invoices</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DataTable
+              columns={columns}
+              data={filteredInvoices}
+              isLoading={isLoading}
+            />
+          </CardContent>
+        </Card>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

@@ -17,6 +17,7 @@ import { Search, Plus, Eye, Trash, FileText, ChevronLeft, ChevronRight } from 'l
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 
 const statusColors: Record<string, string> = {
   draft: 'bg-gray-500',
@@ -113,7 +114,7 @@ const Quotations = () => {
     }
 
     const filtered = quotations.filter(quotation => 
-      quotation.customerName.toLowerCase().includes(searchTerm.toLowerCase())
+      (quotation.customerName?.toLowerCase() || '').includes(searchTerm.toLowerCase())
     );
     
     setFilteredQuotations(filtered);
@@ -138,7 +139,7 @@ const Quotations = () => {
       return;
     }
     
-    if (selectedQuantity > product.quantity) {
+    if (selectedQuantity > (product.quantity || 0)) {
       toast.error(`Only ${product.quantity} ${product.unit}(s) available in inventory`);
       return;
     }
@@ -151,7 +152,7 @@ const Quotations = () => {
       const updatedItems = [...quotationItems];
       const newQuantity = updatedItems[existingItemIndex].quantity + selectedQuantity;
       
-      if (newQuantity > product.quantity) {
+      if (newQuantity > (product.quantity || 0)) {
         toast.error(`Cannot add more than available inventory (${product.quantity} ${product.unit}s)`);
         return;
       }
@@ -261,7 +262,7 @@ const Quotations = () => {
 
   const openEditStatusDialog = (quotation: Quotation) => {
     setSelectedQuotation(quotation);
-    setSelectedStatus(quotation.status);
+    setSelectedStatus(quotation.status || 'draft');
     setIsEditStatusDialogOpen(true);
   };
 
@@ -274,11 +275,15 @@ const Quotations = () => {
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   const calculateTotal = () => {
-    return quotationItems.reduce((total, item) => total + item.totalPrice, 0);
+    return quotationItems.reduce((total, item) => total + (item.totalPrice || 0), 0);
+  };
+
+  const safeToLocaleString = (value: number | undefined) => {
+    return value ? value.toLocaleString('en-IN') : '0';
   };
 
   return (
-    <div className="p-6">
+    <DashboardLayout title="Quotations">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold">Quotations</h1>
@@ -348,7 +353,7 @@ const Quotations = () => {
                             <SelectContent>
                               {products.map(product => (
                                 <SelectItem key={product.id} value={product.id || ''}>
-                                  {product.name} - {product.price.toLocaleString('en-IN')} ₹ ({product.quantity} {product.unit}s available)
+                                  {product.name} - {safeToLocaleString(product.price)} ₹ ({product.quantity} {product.unit}s available)
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -382,9 +387,9 @@ const Quotations = () => {
                               {quotationItems.map((item, index) => (
                                 <TableRow key={index}>
                                   <TableCell>{item.productName}</TableCell>
-                                  <TableCell>₹{item.unitPrice.toLocaleString('en-IN')}</TableCell>
+                                  <TableCell>₹{safeToLocaleString(item.unitPrice)}</TableCell>
                                   <TableCell>{item.quantity} {item.unit}</TableCell>
-                                  <TableCell>₹{item.totalPrice.toLocaleString('en-IN')}</TableCell>
+                                  <TableCell>₹{safeToLocaleString(item.totalPrice)}</TableCell>
                                   <TableCell>
                                     <Button 
                                       variant="ghost" 
@@ -398,7 +403,7 @@ const Quotations = () => {
                               ))}
                               <TableRow>
                                 <TableCell colSpan={3} className="text-right font-medium">Total Amount:</TableCell>
-                                <TableCell className="font-bold">₹{calculateTotal().toLocaleString('en-IN')}</TableCell>
+                                <TableCell className="font-bold">₹{safeToLocaleString(calculateTotal())}</TableCell>
                                 <TableCell></TableCell>
                               </TableRow>
                             </TableBody>
@@ -456,15 +461,15 @@ const Quotations = () => {
                     ) : (
                       currentItems.map((quotation) => (
                         <TableRow key={quotation.id}>
-                          <TableCell className="font-medium">{quotation.id?.substring(0, 8)}</TableCell>
-                          <TableCell>{quotation.customerName}</TableCell>
-                          <TableCell>₹{quotation.totalAmount.toLocaleString('en-IN')}</TableCell>
+                          <TableCell className="font-medium">{quotation.id?.substring(0, 8) || 'N/A'}</TableCell>
+                          <TableCell>{quotation.customerName || 'N/A'}</TableCell>
+                          <TableCell>₹{safeToLocaleString(quotation.totalAmount)}</TableCell>
                           <TableCell>
-                            <Badge className={`${statusColors[quotation.status]} hover:${statusColors[quotation.status]}`}>
-                              {quotation.status.charAt(0).toUpperCase() + quotation.status.slice(1)}
+                            <Badge className={`${statusColors[quotation.status || 'draft']} hover:${statusColors[quotation.status || 'draft']}`}>
+                              {(quotation.status || 'Draft').charAt(0).toUpperCase() + (quotation.status || 'draft').slice(1)}
                             </Badge>
                           </TableCell>
-                          <TableCell>{new Date(quotation.createdAt).toLocaleDateString()}</TableCell>
+                          <TableCell>{quotation.createdAt ? new Date(quotation.createdAt).toLocaleDateString() : 'N/A'}</TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
                               <Button 
@@ -591,17 +596,17 @@ const Quotations = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Status</h3>
-                  <Badge className={`${statusColors[selectedQuotation.status]} hover:${statusColors[selectedQuotation.status]}`}>
-                    {selectedQuotation.status.charAt(0).toUpperCase() + selectedQuotation.status.slice(1)}
+                  <Badge className={`${statusColors[selectedQuotation.status || 'draft']} hover:${statusColors[selectedQuotation.status || 'draft']}`}>
+                    {(selectedQuotation.status || 'Draft').charAt(0).toUpperCase() + (selectedQuotation.status || 'draft').slice(1)}
                   </Badge>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Date Created</h3>
-                  <p>{new Date(selectedQuotation.createdAt).toLocaleDateString()}</p>
+                  <p>{selectedQuotation.createdAt ? new Date(selectedQuotation.createdAt).toLocaleDateString() : 'N/A'}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Total Amount</h3>
-                  <p className="font-medium">₹{selectedQuotation.totalAmount.toLocaleString('en-IN')}</p>
+                  <p className="font-medium">₹{safeToLocaleString(selectedQuotation.totalAmount)}</p>
                 </div>
               </div>
               
@@ -621,14 +626,14 @@ const Quotations = () => {
                       {selectedQuotation.items.map((item, index) => (
                         <TableRow key={index}>
                           <TableCell>{item.productName}</TableCell>
-                          <TableCell>₹{item.unitPrice.toLocaleString('en-IN')}</TableCell>
+                          <TableCell>₹{safeToLocaleString(item.unitPrice)}</TableCell>
                           <TableCell>{item.quantity} {item.unit}</TableCell>
-                          <TableCell>₹{item.totalPrice.toLocaleString('en-IN')}</TableCell>
+                          <TableCell>₹{safeToLocaleString(item.totalPrice)}</TableCell>
                         </TableRow>
                       ))}
                       <TableRow>
                         <TableCell colSpan={3} className="text-right font-medium">Total Amount:</TableCell>
-                        <TableCell className="font-bold">₹{selectedQuotation.totalAmount.toLocaleString('en-IN')}</TableCell>
+                        <TableCell className="font-bold">₹{safeToLocaleString(selectedQuotation.totalAmount)}</TableCell>
                       </TableRow>
                     </TableBody>
                   </Table>
@@ -676,7 +681,7 @@ const Quotations = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </DashboardLayout>
   );
 };
 
