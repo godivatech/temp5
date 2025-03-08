@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { getAllUsersAttendance, getUserAttendance, AttendanceRecord } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,8 +8,6 @@ import { Column } from '@/components/ui/data-table-types';
 import { toast } from 'sonner';
 import { Search, Calendar, Download } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Header } from '@/components/dashboard/Header';
-import { Sidebar } from '@/components/dashboard/Sidebar';
 import { DateRange } from 'react-day-picker';
 import { format, isWithinInterval, parseISO } from 'date-fns';
 import { 
@@ -19,6 +16,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 
 const Attendance = () => {
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
@@ -211,96 +209,95 @@ const Attendance = () => {
     }
   ];
 
-  return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Attendance Management" />
-        <main className="flex-1 overflow-y-auto p-4">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold">Attendance Management</h1>
-              <div className="flex space-x-3">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="flex items-center">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      {date?.from ? (
-                        date.to ? (
-                          <>
-                            {format(date.from, "LLL dd, y")} -{" "}
-                            {format(date.to, "LLL dd, y")}
-                          </>
-                        ) : (
-                          format(date.from, "LLL dd, y")
-                        )
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="end">
-                    <CalendarComponent
-                      initialFocus
-                      mode="range"
-                      defaultMonth={date?.from}
-                      selected={date}
-                      onSelect={setDate}
-                      numberOfMonths={2}
-                    />
-                  </PopoverContent>
-                </Popover>
-                
-                <div className="relative w-64">
-                  <Input
-                    placeholder="Search employees..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                </div>
-                
-                {isAdmin && (
-                  <Button onClick={exportToCSV} className="ml-2">
-                    <Download className="h-4 w-4 mr-2" />
-                    Export
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            {isAdmin && (
-              <Card className="mb-6">
-                <CardHeader className="pb-2">
-                  <CardTitle>Attendance Summary</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <DataTable
-                    columns={statsColumns}
-                    data={calculateAttendanceStats()}
-                    isLoading={isLoading}
-                  />
-                </CardContent>
-              </Card>
+  const tableActions = (
+    <div className="flex space-x-3">
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className="flex items-center border-indigo-200 hover:bg-indigo-50 hover:border-indigo-300">
+            <Calendar className="h-4 w-4 mr-2 text-indigo-500" />
+            {date?.from ? (
+              date.to ? (
+                <>
+                  {format(date.from, "LLL dd, y")} -{" "}
+                  {format(date.to, "LLL dd, y")}
+                </>
+              ) : (
+                format(date.from, "LLL dd, y")
+              )
+            ) : (
+              <span>Pick a date</span>
             )}
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle>Attendance Records</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <DataTable
-                  columns={columns}
-                  data={filteredRecords}
-                  isLoading={isLoading}
-                />
-              </CardContent>
-            </Card>
-          </div>
-        </main>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="end">
+          <CalendarComponent
+            initialFocus
+            mode="range"
+            defaultMonth={date?.from}
+            selected={date}
+            onSelect={setDate}
+            numberOfMonths={2}
+          />
+        </PopoverContent>
+      </Popover>
+      
+      <div className="relative w-64">
+        <Input
+          placeholder="Search employees..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10 border-indigo-200 focus:border-indigo-300"
+        />
+        <Search className="absolute left-3 top-2.5 h-4 w-4 text-indigo-400" />
       </div>
+      
+      {isAdmin && (
+        <Button 
+          onClick={exportToCSV} 
+          className="ml-2 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700"
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Export
+        </Button>
+      )}
     </div>
+  );
+
+  return (
+    <DashboardLayout
+      title="Attendance Management"
+      actions={tableActions}
+    >
+      <div className="space-y-6">
+        {isAdmin && (
+          <Card className="border border-indigo-100 shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-indigo-700">Attendance Summary</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DataTable
+                columns={statsColumns}
+                data={calculateAttendanceStats()}
+                isLoading={isLoading}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        <Card className="border border-indigo-100 shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-indigo-700">Attendance Records</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DataTable
+              columns={columns}
+              data={filteredRecords}
+              isLoading={isLoading}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    </DashboardLayout>
   );
 };
 

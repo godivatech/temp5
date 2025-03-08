@@ -13,6 +13,7 @@ import {
   Clock,
   LogOut,
   Menu,
+  Sun,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -113,7 +114,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       >
         <item.icon
           className={cn(
-            'h-5 w-5 shrink-0 transition-transform group-hover:scale-110'
+            'h-5 w-5 shrink-0 transition-transform group-hover:scale-110',
+            pathname === item.path ? 'text-indigo-600' : 'text-gray-500'
           )}
         />
         {(isExpanded || (isMobile && isMobileExpanded)) && (
@@ -127,43 +129,49 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   const desktopSidebar = (
     <aside
       className={cn(
-        'h-screen bg-white border-r border-gray-200 transition-all duration-300 relative',
-        isExpanded ? 'w-64' : 'w-16'
+        'h-screen bg-white border-r border-indigo-100 transition-all duration-300 relative shadow-sm',
+        isExpanded ? 'w-64' : 'w-20'
       )}
     >
       <div className="flex h-full flex-col">
-        <div className="flex h-16 items-center px-4 border-b border-gray-200">
+        <div className="flex h-16 items-center px-4 border-b border-indigo-100">
           {isExpanded ? (
-            <h2 className="text-lg font-bold text-primary">Prakash Green</h2>
+            <div className="flex items-center">
+              <Sun className="h-6 w-6 text-indigo-500 mr-2" />
+              <h2 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-green-500">Prakash Green</h2>
+            </div>
           ) : (
             <div className="flex w-full justify-center">
-              <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+              <div className="h-10 w-10 rounded-full bg-gradient-to-r from-indigo-500 to-green-500 text-white flex items-center justify-center">
                 <span className="text-lg font-bold">P</span>
               </div>
             </div>
           )}
         </div>
 
-        <div className="flex-1 overflow-auto py-2 px-3">
-          <nav className="flex flex-col gap-1">
+        <div className="flex-1 overflow-auto py-4 px-3">
+          <nav className="flex flex-col gap-2">
             {renderNavItems(mainNavItems)}
 
             {(hasRole(['master_admin']) || hasRole(['admin'])) && (
               <>
-                <div className="my-2 border-t border-gray-200" />
+                <div className="my-3 border-t border-indigo-100" />
+                <p className="px-3 text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
+                  {isExpanded ? 'Administration' : 'Admin'}
+                </p>
                 {renderNavItems(adminNavItems)}
               </>
             )}
           </nav>
         </div>
 
-        <div className="sticky inset-x-0 bottom-0 border-t border-gray-200 bg-white p-3">
+        <div className="sticky inset-x-0 bottom-0 border-t border-indigo-100 bg-white p-3">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3 rounded-md py-2">
               {isExpanded && (
                 <>
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                    <div className="h-8 w-8 rounded-full bg-gradient-to-r from-indigo-500 to-green-500 text-white flex items-center justify-center">
                       <span className="text-sm font-medium">
                         {userData?.displayName?.charAt(0).toUpperCase()}
                       </span>
@@ -178,7 +186,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
                 </>
               )}
               <button
-                className="ml-auto flex h-8 w-8 items-center justify-center rounded-md hover:bg-gray-100"
+                className="ml-auto flex h-8 w-8 items-center justify-center rounded-md hover:bg-indigo-50 text-indigo-500"
                 onClick={toggleSidebar}
               >
                 {isExpanded ? (
@@ -188,7 +196,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
                 )}
               </button>
             </div>
-            <Button variant="outline" size="sm" onClick={handleLogout} className="w-full gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleLogout} 
+              className="w-full gap-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:text-indigo-800 hover:border-indigo-300"
+            >
               <LogOut className="h-4 w-4" />
               {isExpanded && <span>Logout</span>}
             </Button>
@@ -202,7 +215,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   const mobileSidebar = (
     <>
       <button
-        className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-md bg-white shadow-md"
+        className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-md bg-white shadow-md text-indigo-600"
         onClick={toggleMobileSidebar}
       >
         <Menu className="h-5 w-5" />
@@ -218,39 +231,45 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
 
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 h-screen w-64 bg-white border-r border-gray-200 shadow-xl transition-transform duration-300',
+          'fixed inset-y-0 left-0 z-50 h-screen w-72 bg-white border-r border-indigo-100 shadow-xl transition-transform duration-300',
           isMobileExpanded ? 'translate-x-0' : '-translate-x-full'
         )}
       >
         <div className="flex h-full flex-col">
-          <div className="flex h-16 items-center justify-between px-4 border-b border-gray-200">
-            <h2 className="text-lg font-bold text-primary">Prakash Green</h2>
+          <div className="flex h-16 items-center justify-between px-4 border-b border-indigo-100">
+            <div className="flex items-center">
+              <Sun className="h-6 w-6 text-indigo-500 mr-2" />
+              <h2 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-green-500">Prakash Green</h2>
+            </div>
             <button
-              className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-gray-100"
+              className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-indigo-50 text-indigo-500"
               onClick={() => setIsMobileExpanded(false)}
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
           </div>
 
-          <div className="flex-1 overflow-auto py-2 px-3">
-            <nav className="flex flex-col gap-1">
+          <div className="flex-1 overflow-auto py-4 px-3">
+            <nav className="flex flex-col gap-2">
               {renderNavItems(mainNavItems)}
 
               {(hasRole(['master_admin']) || hasRole(['admin'])) && (
                 <>
-                  <div className="my-2 border-t border-gray-200" />
+                  <div className="my-3 border-t border-indigo-100" />
+                  <p className="px-3 text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
+                    Administration
+                  </p>
                   {renderNavItems(adminNavItems)}
                 </>
               )}
             </nav>
           </div>
 
-          <div className="sticky inset-x-0 bottom-0 border-t border-gray-200 bg-white p-3">
+          <div className="sticky inset-x-0 bottom-0 border-t border-indigo-100 bg-white p-3">
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-3 rounded-md py-2">
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-r from-indigo-500 to-green-500 text-white flex items-center justify-center">
                     <span className="text-sm font-medium">
                       {userData?.displayName?.charAt(0).toUpperCase()}
                     </span>
@@ -263,7 +282,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
                   </div>
                 </div>
               </div>
-              <Button variant="outline" size="sm" onClick={handleLogout} className="w-full gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleLogout} 
+                className="w-full gap-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:text-indigo-800 hover:border-indigo-300"
+              >
                 <LogOut className="h-4 w-4" />
                 <span>Logout</span>
               </Button>

@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { initializeApp } from "firebase/app";
 
 // Pages
@@ -24,6 +24,9 @@ import Attendance from "./pages/dashboard/Attendance";
 // Routes
 import ProtectedRoute from "./components/ProtectedRoute";
 import RoleRoute from "./components/RoleRoute";
+
+// CSS
+import "./App.css";
 
 const queryClient = new QueryClient();
 
@@ -49,11 +52,7 @@ const firebaseConfigured = () => {
 };
 
 const App = () => {
-  const [isFirebaseConfigured, setIsFirebaseConfigured] = useState(firebaseConfigured());
-
-  useEffect(() => {
-    setIsFirebaseConfigured(firebaseConfigured());
-  }, []);
+  const isFirebaseConfigured = firebaseConfigured();
 
   if (!isFirebaseConfigured) {
     return (

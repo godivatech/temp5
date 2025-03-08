@@ -1,123 +1,191 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { markAttendance, getCustomers, getProducts, getQuotations } from '@/lib/firebase';
+import { markAttendance, getCustomers, getProducts, getQuotations, getInvoices, ref, onValue, database } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { UserCog, Users, Package, FileText, Clock } from 'lucide-react';
+import { UserCog, Users, Package, FileText, Clock, RefreshCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 
 const Dashboard = () => {
   const { userData } = useAuth();
   const [customerCount, setCustomerCount] = useState(0);
   const [productCount, setProductCount] = useState(0);
   const [quotationCount, setQuotationCount] = useState(0);
-  const [isAttendanceMarked, setIsAttendanceMarked] = useState(false);
+  const [invoiceCount, setInvoiceCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        const customers = await getCustomers();
-        const products = await getProducts();
-        const quotations = await getQuotations();
-        
-        setCustomerCount(customers.length);
-        setProductCount(products.length);
-        setQuotationCount(quotations.length);
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        toast.error('Failed to load dashboard data');
-      } finally {
-        setIsLoading(false);
-      }
+    // Set up real-time data fetching
+    const fetchRealTimeData = () => {
+      // Get customers in real-time
+      const customersRef = ref(database, 'customers');
+      const unsubscribeCustomers = onValue(customersRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const customers = Object.keys(snapshot.val()).length;
+          setCustomerCount(customers);
+        } else {
+          setCustomerCount(0);
+        }
+      }, (error) => {
+        console.error('Error fetching customers:', error);
+      });
+
+      // Get products in real-time
+      const productsRef = ref(database, 'products');
+      const unsubscribeProducts = onValue(productsRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const products = Object.keys(snapshot.val()).length;
+          setProductCount(products);
+        } else {
+          setProductCount(0);
+        }
+      }, (error) => {
+        console.error('Error fetching products:', error);
+      });
+
+      // Get quotations in real-time
+      const quotationsRef = ref(database, 'quotations');
+      const unsubscribeQuotations = onValue(quotationsRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const quotations = Object.keys(snapshot.val()).length;
+          setQuotationCount(quotations);
+        } else {
+          setQuotationCount(0);
+        }
+      }, (error) => {
+        console.error('Error fetching quotations:', error);
+      });
+
+      // Get invoices in real-time
+      const invoicesRef = ref(database, 'invoices');
+      const unsubscribeInvoices = onValue(invoicesRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const invoices = Object.keys(snapshot.val()).length;
+          setInvoiceCount(invoices);
+        } else {
+          setInvoiceCount(0);
+        }
+      }, (error) => {
+        console.error('Error fetching invoices:', error);
+      });
+
+      setIsLoading(false);
+
+      // Clean up subscriptions on unmount
+      return () => {
+        unsubscribeCustomers();
+        unsubscribeProducts();
+        unsubscribeQuotations();
+        unsubscribeInvoices();
+      };
     };
 
-    fetchData();
+    fetchRealTimeData();
   }, []);
 
-  const handleMarkAttendance = async () => {
+  const handleRefreshData = async () => {
     try {
-      await markAttendance();
-      setIsAttendanceMarked(true);
-      toast.success('Attendance marked successfully');
+      setRefreshing(true);
+      
+      // Fetch data manually (useful for ensuring we have the latest data)
+      const customers = await getCustomers();
+      const products = await getProducts();
+      const quotations = await getQuotations();
+      let invoices = [];
+      
+      try {
+        invoices = await getInvoices();
+      } catch (error) {
+        console.log('User may not have permission to view invoices');
+      }
+      
+      setCustomerCount(customers.length);
+      setProductCount(products.length);
+      setQuotationCount(quotations.length);
+      setInvoiceCount(invoices.length);
+      
+      toast.success('Dashboard data refreshed');
     } catch (error) {
-      console.error('Error marking attendance:', error);
-      toast.error('Failed to mark attendance');
+      console.error('Error refreshing data:', error);
+      toast.error('Failed to refresh data');
+    } finally {
+      setRefreshing(false);
     }
   };
 
   return (
-    <div className="p-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-gray-500">Welcome back, {userData?.displayName || 'User'}</p>
-        </div>
+    <DashboardLayout
+      title="Dashboard"
+      subtitle={`Welcome back, ${userData?.displayName || 'User'}`}
+      actions={
         <Button 
-          onClick={handleMarkAttendance} 
-          className="mt-4 md:mt-0"
-          disabled={isAttendanceMarked}
+          onClick={handleRefreshData} 
+          variant="outline" 
+          size="sm"
+          disabled={refreshing}
+          className="flex items-center gap-1"
         >
-          <Clock className="mr-2 h-4 w-4" />
-          {isAttendanceMarked ? 'Attendance Marked' : 'Mark Attendance'}
+          <RefreshCcw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+          <span className="hidden sm:inline">Refresh</span>
         </Button>
-      </div>
-
+      }
+    >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card className="hover:shadow-md transition-shadow">
+        <Card className="hover:shadow-md transition-shadow bg-gradient-to-br from-white to-blue-50 border border-blue-100">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <Users className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{isLoading ? '...' : customerCount}</div>
             <p className="text-xs text-muted-foreground pt-1">
-              <Button variant="link" className="p-0 h-auto text-xs" onClick={() => navigate('/dashboard/customers')}>
+              <Button variant="link" className="p-0 h-auto text-xs text-blue-600" onClick={() => navigate('/dashboard/customers')}>
                 View all customers
               </Button>
             </p>
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-md transition-shadow">
+        <Card className="hover:shadow-md transition-shadow bg-gradient-to-br from-white to-indigo-50 border border-indigo-100">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+            <Package className="h-4 w-4 text-indigo-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{isLoading ? '...' : productCount}</div>
             <p className="text-xs text-muted-foreground pt-1">
-              <Button variant="link" className="p-0 h-auto text-xs" onClick={() => navigate('/dashboard/products')}>
+              <Button variant="link" className="p-0 h-auto text-xs text-indigo-600" onClick={() => navigate('/dashboard/products')}>
                 View all products
               </Button>
             </p>
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-md transition-shadow">
+        <Card className="hover:shadow-md transition-shadow bg-gradient-to-br from-white to-green-50 border border-green-100">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Quotations</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <FileText className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{isLoading ? '...' : quotationCount}</div>
             <p className="text-xs text-muted-foreground pt-1">
-              <Button variant="link" className="p-0 h-auto text-xs" onClick={() => navigate('/dashboard/quotations')}>
+              <Button variant="link" className="p-0 h-auto text-xs text-green-600" onClick={() => navigate('/dashboard/quotations')}>
                 View all quotations
               </Button>
             </p>
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-md transition-shadow">
+        <Card className="hover:shadow-md transition-shadow bg-gradient-to-br from-white to-purple-50 border border-purple-100">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Account Type</CardTitle>
-            <UserCog className="h-4 w-4 text-muted-foreground" />
+            <UserCog className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold capitalize">{userData?.role || 'Employee'}</div>
@@ -129,26 +197,38 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="col-span-1 lg:col-span-2">
+        <Card className="col-span-1 lg:col-span-2 hover:shadow-md transition-shadow border border-indigo-100">
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle className="text-indigo-700">Quick Actions</CardTitle>
             <CardDescription>Frequently used actions</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Button className="justify-start" variant="outline" onClick={() => navigate('/dashboard/customers')}>
+              <Button 
+                className="justify-start bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white" 
+                onClick={() => navigate('/dashboard/customers')}
+              >
                 <Users className="mr-2 h-4 w-4" />
                 Add New Customer
               </Button>
-              <Button className="justify-start" variant="outline" onClick={() => navigate('/dashboard/products')}>
+              <Button 
+                className="justify-start bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white" 
+                onClick={() => navigate('/dashboard/products')}
+              >
                 <Package className="mr-2 h-4 w-4" />
                 Add New Product
               </Button>
-              <Button className="justify-start" variant="outline" onClick={() => navigate('/dashboard/quotations')}>
+              <Button 
+                className="justify-start bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white" 
+                onClick={() => navigate('/dashboard/quotations')}
+              >
                 <FileText className="mr-2 h-4 w-4" />
                 Create Quotation
               </Button>
-              <Button className="justify-start" variant="outline" onClick={() => navigate('/dashboard/invoices')}>
+              <Button 
+                className="justify-start bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white" 
+                onClick={() => navigate('/dashboard/invoices')}
+              >
                 <FileText className="mr-2 h-4 w-4" />
                 Generate Invoice
               </Button>
@@ -156,9 +236,9 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-md transition-shadow border border-indigo-100">
           <CardHeader>
-            <CardTitle>System Information</CardTitle>
+            <CardTitle className="text-indigo-700">System Information</CardTitle>
             <CardDescription>Solar Panel Management</CardDescription>
           </CardHeader>
           <CardContent>
@@ -190,7 +270,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

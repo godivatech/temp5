@@ -1,3 +1,4 @@
+
 import { initializeApp } from 'firebase/app';
 import { 
   getAuth, 
@@ -448,17 +449,45 @@ export const getProductById = async (productId: string) => {
   }
 };
 
-// Database functions for quotations
+// Database functions for quotations with fixed quantity handling
 export const createQuotation = async (quotation: Omit<Quotation, 'id' | 'createdAt' | 'createdBy'>) => {
   try {
     const user = auth.currentUser;
     if (!user) throw new Error("User not authenticated");
     
+    // Ensure each item has the correct quantity
+    const quotationWithValidItems = {
+      ...quotation,
+      items: await Promise.all(quotation.items.map(async (item) => {
+        // Make sure we convert quantity to a proper number
+        const quantity = Number(item.quantity);
+        if (isNaN(quantity)) {
+          throw new Error(`Invalid quantity for product ${item.productName}`);
+        }
+        
+        // Calculate total price based on quantity and unit price
+        const totalPrice = quantity * item.unitPrice;
+        
+        return {
+          ...item,
+          quantity,
+          totalPrice
+        };
+      }))
+    };
+    
+    // Calculate the total amount based on all item totals
+    const totalAmount = quotationWithValidItems.items.reduce(
+      (sum, item) => sum + item.totalPrice, 
+      0
+    );
+    
     const quotationsRef = ref(database, 'quotations');
     const newQuotationRef = push(quotationsRef);
     
     const newQuotation: Quotation = {
-      ...quotation,
+      ...quotationWithValidItems,
+      totalAmount,
       createdAt: Date.now(),
       createdBy: user.uid,
     };
@@ -473,6 +502,32 @@ export const createQuotation = async (quotation: Omit<Quotation, 'id' | 'created
 
 export const updateQuotation = async (quotationId: string, updates: Partial<Quotation>) => {
   try {
+    // If we're updating items, ensure quantities are valid
+    if (updates.items) {
+      updates.items = await Promise.all(updates.items.map(async (item) => {
+        // Make sure we convert quantity to a proper number
+        const quantity = Number(item.quantity);
+        if (isNaN(quantity)) {
+          throw new Error(`Invalid quantity for product ${item.productName}`);
+        }
+        
+        // Calculate total price based on quantity and unit price
+        const totalPrice = quantity * item.unitPrice;
+        
+        return {
+          ...item,
+          quantity,
+          totalPrice
+        };
+      }));
+      
+      // Recalculate total amount if items changed
+      updates.totalAmount = updates.items.reduce(
+        (sum, item) => sum + item.totalPrice, 
+        0
+      );
+    }
+    
     await update(ref(database, `quotations/${quotationId}`), updates);
     return true;
   } catch (error) {
@@ -527,10 +582,28 @@ export const getQuotationById = async (quotationId: string) => {
     
     if (!snapshot.exists()) return null;
     
-    return {
+    const quotation = {
       id: snapshot.key,
       ...snapshot.val()
     } as Quotation;
+    
+    // Validate the items to ensure quantities are correct
+    const validatedItems = quotation.items.map(item => {
+      const quantity = Number(item.quantity);
+      const totalPrice = quantity * item.unitPrice;
+      
+      return {
+        ...item,
+        quantity: isNaN(quantity) ? 0 : quantity,
+        totalPrice: isNaN(totalPrice) ? 0 : totalPrice
+      };
+    });
+    
+    return {
+      ...quotation,
+      items: validatedItems,
+      totalAmount: validatedItems.reduce((sum, item) => sum + item.totalPrice, 0)
+    };
   } catch (error) {
     console.error("Error getting quotation:", error);
     throw error;
