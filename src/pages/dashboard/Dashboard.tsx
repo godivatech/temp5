@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Package, FileText, FileInput, TrendingUp, BarChart2 } from 'lucide-react';
 import { getCustomers, getProducts, getQuotations, getInvoices } from '@/lib/firebase';
 import { useQuery } from '@tanstack/react-query';
-import DashboardLayout from '@/components/dashboard/DashboardLayout';
 
 const Dashboard = () => {
   const { userData } = useAuth();
@@ -80,7 +79,7 @@ const Dashboard = () => {
     {
       title: 'Total Customers',
       value: customers.length.toString(),
-      icon: <Users className="h-8 w-8 text-primary" />,
+      icon: <Users className="h-8 w-8 text-blue-500" />,
       description: `${customers.length} customers in database`,
       color: 'bg-blue-50 dark:bg-blue-900/20'
     },
@@ -138,7 +137,7 @@ const Dashboard = () => {
         <Card className="shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border-none bg-white/70 dark:bg-gray-800/50 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="text-lg text-gray-800 dark:text-white flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
+              <TrendingUp className="h-5 w-5 text-indigo-500" />
               Recent Sales
             </CardTitle>
           </CardHeader>
@@ -153,7 +152,7 @@ const Dashboard = () => {
         <Card className="shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border-none bg-white/70 dark:bg-gray-800/50 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="text-lg text-gray-800 dark:text-white flex items-center gap-2">
-              <BarChart2 className="h-5 w-5 text-primary" />
+              <BarChart2 className="h-5 w-5 text-indigo-500" />
               Top Products
             </CardTitle>
           </CardHeader>
@@ -169,10 +168,4 @@ const Dashboard = () => {
   );
 };
 
-const DashboardWithLayout = () => (
-  <DashboardLayout>
-    <Dashboard />
-  </DashboardLayout>
-);
-
-export default DashboardWithLayout;
+export default Dashboard;

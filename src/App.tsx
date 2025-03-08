@@ -21,10 +21,12 @@ import Invoices from "./pages/dashboard/Invoices";
 import UserManagement from "./pages/dashboard/UserManagement";
 import Attendance from "./pages/dashboard/Attendance";
 
+// Layouts
+import DashboardLayout from "./components/dashboard/DashboardLayout";
+
 // Routes
 import ProtectedRoute from "./components/ProtectedRoute";
 import RoleRoute from "./components/RoleRoute";
-import DashboardLayout from "./components/dashboard/DashboardLayout";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -104,7 +106,7 @@ const App = () => {
               <Route path="/signin" element={<SignIn />} />
               <Route path="/signup" element={<SignUp />} />
               
-              {/* Dashboard routes with consistent layout */}
+              {/* Dashboard routes with layout */}
               <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <DashboardLayout>

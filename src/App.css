@@ -17,26 +17,26 @@ body, html {
 
 /* Rich UI Enhancements */
 .glass-card {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
 }
 
 .glass-card:hover {
-  background: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
 }
 
 .dark .glass-card {
-  background: rgba(30, 30, 30, 0.7);
+  background: rgba(30, 30, 30, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .dark .glass-card:hover {
-  background: rgba(30, 30, 30, 0.8);
+  background: rgba(30, 30, 30, 0.9);
 }
 
 /* Smooth Transitions */
@@ -123,7 +123,7 @@ body, html {
 
 .hover-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
 }
 
 /* Animations */
@@ -162,4 +162,52 @@ body, html {
 .dark .shimmer {
   background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
   background-size: 200% 100%;
+}
+
+/* Dashboard card styles */
+.dashboard-card {
+  @apply bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900;
+  transition: all 0.3s ease;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
+}
+
+/* Indigo accent styles */
+.accent-indigo {
+  @apply bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400;
+}
+
+.accent-emerald {
+  @apply bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400;
+}
+
+.accent-amber {
+  @apply bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400;
+}
+
+.accent-rose {
+  @apply bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400;
+}
+
+/* New Background Gradients */
+.bg-gradient-subtle {
+  @apply bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800;
+}
+
+.bg-gradient-cool {
+  @apply bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950 dark:via-indigo-950 dark:to-purple-950;
+}
+
+.bg-gradient-warm {
+  @apply bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 dark:from-amber-950 dark:via-orange-950 dark:to-rose-950;
+}
+
+.bg-gradient-nature {
+  @apply bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 dark:from-emerald-950 dark:via-green-950 dark:to-teal-950;
 }
