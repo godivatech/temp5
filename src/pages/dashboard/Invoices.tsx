@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { getInvoices, Invoice } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,8 +15,6 @@ import {
   ArrowUpDown, 
   Calendar
 } from 'lucide-react';
-import { Header } from '@/components/dashboard/Header';
-import { Sidebar } from '@/components/dashboard/Sidebar';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -31,8 +28,9 @@ import {
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from 'date-fns';
+import DashboardLayout from '@/components/dashboard/DashboardLayout';
 
-const Invoices = () => {
+const InvoicesContent = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -129,7 +127,6 @@ const Invoices = () => {
     try {
       setIsLoading(true);
       const data = await getInvoices();
-      // Add default values for all required fields to prevent undefined errors
       const processedData = data.map(invoice => ({
         ...invoice,
         customerName: invoice.customerName || 'Unknown Customer',
@@ -154,28 +151,21 @@ const Invoices = () => {
   };
 
   const handleViewInvoice = (invoice: Invoice) => {
-    // This would typically navigate to a detailed invoice view
     toast.info(`Viewing invoice ${invoice.id}`);
-    // Example: navigate(`/dashboard/invoices/${invoice.id}`);
   };
 
   const handleCreateInvoice = () => {
-    // This would typically navigate to an invoice creation page
     toast.info('Creating new invoice');
-    // Example: navigate('/dashboard/invoices/create');
   };
 
   const getFilteredInvoices = () => {
     return invoices.filter((invoice) => {
-      // Filter by search term with null checks to prevent undefined errors
       const matchesSearch = 
         (invoice.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
         (invoice.id?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
       
-      // Filter by status
       const matchesStatus = !statusFilter || invoice.status === statusFilter;
       
-      // Filter by date
       const matchesDate = !date || 
         new Date(invoice.createdAt).toDateString() === date.toDateString();
       
@@ -186,154 +176,154 @@ const Invoices = () => {
   const filteredInvoices = getFilteredInvoices();
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Invoices" />
-        <main className="flex-1 overflow-y-auto p-4">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-              <h1 className="text-2xl font-bold">Invoices</h1>
-              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                <div className="relative w-full sm:w-64">
-                  <Input
-                    placeholder="Search invoices..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                </div>
-                
-                <div className="flex gap-2">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-10">
-                        <Calendar className="h-4 w-4 mr-2" />
-                        {date ? format(date, "PPP") : "Pick date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="end">
-                      <CalendarComponent
-                        mode="single"
-                        selected={date}
-                        onSelect={setDate}
-                        initialFocus
-                      />
-                      {date && (
-                        <div className="p-3 border-t border-gray-100 flex justify-between">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => setDate(undefined)}
-                          >
-                            Clear
-                          </Button>
-                        </div>
-                      )}
-                    </PopoverContent>
-                  </Popover>
-                  
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-10">
-                        <Filter className="h-4 w-4 mr-2" />
-                        {statusFilter ? `Status: ${statusFilter}` : "All statuses"}
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setStatusFilter(null)}>
-                        All statuses
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setStatusFilter('paid')}>
-                        Paid
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setStatusFilter('pending')}>
-                        Pending
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setStatusFilter('overdue')}>
-                        Overdue
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  
-                  <Button onClick={handleCreateInvoice}>
-                    Create Invoice
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            <Card className="shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl">All Invoices</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <DataTable
-                  columns={columns}
-                  data={filteredInvoices}
-                  isLoading={isLoading}
+    <div>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Invoices</h1>
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <div className="relative w-full sm:w-64">
+            <Input
+              placeholder="Search invoices..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+          </div>
+          
+          <div className="flex gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="h-10">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  {date ? format(date, "PPP") : "Pick date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <CalendarComponent
+                  mode="single"
+                  selected={date}
+                  onSelect={setDate}
+                  initialFocus
                 />
-                
-                {filteredInvoices.length === 0 && !isLoading && (
-                  <div className="flex flex-col items-center justify-center py-8">
-                    <FileText className="h-12 w-12 text-gray-300 mb-2" />
-                    <h3 className="text-lg font-medium text-gray-900">No invoices found</h3>
-                    <p className="text-sm text-gray-500 mb-4">
-                      {searchTerm || statusFilter || date
-                        ? "Try adjusting your filters"
-                        : "Create your first invoice to get started"
-                      }
-                    </p>
-                    {!searchTerm && !statusFilter && !date && (
-                      <Button onClick={handleCreateInvoice}>
-                        Create Invoice
-                      </Button>
-                    )}
+                {date && (
+                  <div className="p-3 border-t border-gray-100 flex justify-between">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setDate(undefined)}
+                    >
+                      Clear
+                    </Button>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </PopoverContent>
+            </Popover>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Total Invoices</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{invoices.length}</div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Pending Payment</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {invoices.filter(i => i.status === 'pending').length}
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    ₹{invoices
-                      .filter(i => i.status === 'paid')
-                      .reduce((total, invoice) => total + (invoice.totalAmount || 0), 0)
-                      .toLocaleString()}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-10">
+                  <Filter className="h-4 w-4 mr-2" />
+                  {statusFilter ? `Status: ${statusFilter}` : "All statuses"}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="animate-scale-in">
+                <DropdownMenuItem onClick={() => setStatusFilter(null)}>
+                  All statuses
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('paid')}>
+                  Paid
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('pending')}>
+                  Pending
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('overdue')}>
+                  Overdue
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
+            <Button onClick={handleCreateInvoice} className="bg-primary hover:bg-primary/90">
+              Create Invoice
+            </Button>
           </div>
-        </main>
+        </div>
+      </div>
+
+      <Card className="shadow-sm hover:shadow-md transition-all border-none glass-card">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-xl text-gray-800 dark:text-white">All Invoices</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DataTable
+            columns={columns}
+            data={filteredInvoices}
+            isLoading={isLoading}
+          />
+          
+          {filteredInvoices.length === 0 && !isLoading && (
+            <div className="flex flex-col items-center justify-center py-8">
+              <FileText className="h-12 w-12 text-gray-300 dark:text-gray-600 mb-2" />
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">No invoices found</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                {searchTerm || statusFilter || date
+                  ? "Try adjusting your filters"
+                  : "Create your first invoice to get started"
+                }
+              </p>
+              {!searchTerm && !statusFilter && !date && (
+                <Button onClick={handleCreateInvoice}>
+                  Create Invoice
+                </Button>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+        <Card className="glass-card border-none">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">Total Invoices</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-gray-800 dark:text-white">{invoices.length}</div>
+          </CardContent>
+        </Card>
+        
+        <Card className="glass-card border-none">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">Pending Payment</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-500">
+              {invoices.filter(i => i.status === 'pending').length}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="glass-card border-none">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">Total Revenue</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-emerald-500">
+              ₹{invoices
+                .filter(i => i.status === 'paid')
+                .reduce((total, invoice) => total + (invoice.totalAmount || 0), 0)
+                .toLocaleString()}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
+  );
+};
+
+const Invoices = () => {
+  return (
+    <DashboardLayout>
+      <InvoicesContent />
+    </DashboardLayout>
   );
 };
 
