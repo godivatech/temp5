@@ -24,12 +24,15 @@ import Attendance from "./pages/dashboard/Attendance";
 // Routes
 import ProtectedRoute from "./components/ProtectedRoute";
 import RoleRoute from "./components/RoleRoute";
+import DashboardLayout from "./components/dashboard/DashboardLayout";
 
+// Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
       staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: true,
     },
   },
 });
@@ -101,34 +104,45 @@ const App = () => {
               <Route path="/signin" element={<SignIn />} />
               <Route path="/signup" element={<SignUp />} />
               
+              {/* Dashboard routes with consistent layout */}
               <Route path="/dashboard" element={
                 <ProtectedRoute>
-                  <Dashboard />
+                  <DashboardLayout>
+                    <Dashboard />
+                  </DashboardLayout>
                 </ProtectedRoute>
               } />
               
               <Route path="/dashboard/customers" element={
                 <ProtectedRoute>
-                  <Customers />
+                  <DashboardLayout>
+                    <Customers />
+                  </DashboardLayout>
                 </ProtectedRoute>
               } />
               
               <Route path="/dashboard/products" element={
                 <ProtectedRoute>
-                  <Products />
+                  <DashboardLayout>
+                    <Products />
+                  </DashboardLayout>
                 </ProtectedRoute>
               } />
               
               <Route path="/dashboard/quotations" element={
                 <ProtectedRoute>
-                  <Quotations />
+                  <DashboardLayout>
+                    <Quotations />
+                  </DashboardLayout>
                 </ProtectedRoute>
               } />
               
               <Route path="/dashboard/invoices" element={
                 <ProtectedRoute>
                   <RoleRoute allowedRoles={['master_admin', 'admin']}>
-                    <Invoices />
+                    <DashboardLayout>
+                      <Invoices />
+                    </DashboardLayout>
                   </RoleRoute>
                 </ProtectedRoute>
               } />
@@ -136,7 +150,9 @@ const App = () => {
               <Route path="/dashboard/users" element={
                 <ProtectedRoute>
                   <RoleRoute allowedRoles={['master_admin']}>
-                    <UserManagement />
+                    <DashboardLayout>
+                      <UserManagement />
+                    </DashboardLayout>
                   </RoleRoute>
                 </ProtectedRoute>
               } />
@@ -144,7 +160,9 @@ const App = () => {
               <Route path="/dashboard/attendance" element={
                 <ProtectedRoute>
                   <RoleRoute allowedRoles={['master_admin', 'admin']}>
-                    <Attendance />
+                    <DashboardLayout>
+                      <Attendance />
+                    </DashboardLayout>
                   </RoleRoute>
                 </ProtectedRoute>
               } />
