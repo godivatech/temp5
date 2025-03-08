@@ -1,170 +1,196 @@
 
-import React from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Package, FileText, FileInput, TrendingUp, BarChart2 } from 'lucide-react';
-import { getCustomers, getProducts, getQuotations, getInvoices } from '@/lib/firebase';
-import { useQuery } from '@tanstack/react-query';
+import { markAttendance, getCustomers, getProducts, getQuotations } from '@/lib/firebase';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { UserCog, Users, Package, FileText, Clock } from 'lucide-react';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
   const { userData } = useAuth();
-  
-  // Fetch real-time data using React Query
-  const { data: customers = [] } = useQuery({
-    queryKey: ['customers'],
-    queryFn: getCustomers,
-  });
-  
-  const { data: products = [] } = useQuery({
-    queryKey: ['products'],
-    queryFn: getProducts,
-  });
-  
-  const { data: quotations = [] } = useQuery({
-    queryKey: ['quotations'],
-    queryFn: getQuotations,
-  });
-  
-  const { data: invoices = [] } = useQuery({
-    queryKey: ['invoices'],
-    queryFn: () => getInvoices().catch(() => []), // Handle permission errors
-  });
-  
-  // Calculate revenue from invoices
-  const calculateTotalRevenue = () => {
-    return invoices.reduce((total, invoice) => total + (invoice.totalAmount || 0), 0);
-  };
-  
-  // Get count of invoices from current month
-  const getMonthlyInvoicesCount = () => {
-    const now = new Date();
-    const thisMonth = now.getMonth();
-    const thisYear = now.getFullYear();
-    
-    return invoices.filter(invoice => {
-      const invoiceDate = invoice.createdAt ? new Date(invoice.createdAt) : null;
-      return invoiceDate && 
-             invoiceDate.getMonth() === thisMonth && 
-             invoiceDate.getFullYear() === thisYear;
-    }).length;
-  };
-  
-  // Get count of new products added this week
-  const getNewProductsThisWeek = () => {
-    const now = new Date();
-    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    
-    return products.filter(product => {
-      const productDate = product.createdAt ? new Date(product.createdAt) : null;
-      return productDate && productDate >= oneWeekAgo;
-    }).length;
-  };
-  
-  // Get count of quotations sent this month
-  const getQuotationsSentThisMonth = () => {
-    const now = new Date();
-    const thisMonth = now.getMonth();
-    const thisYear = now.getFullYear();
-    
-    return quotations.filter(quotation => {
-      const quotationDate = quotation.createdAt ? new Date(quotation.createdAt) : null;
-      return quotationDate && 
-             quotationDate.getMonth() === thisMonth && 
-             quotationDate.getFullYear() === thisYear &&
-             quotation.status === 'sent';
-    }).length;
-  };
+  const [customerCount, setCustomerCount] = useState(0);
+  const [productCount, setProductCount] = useState(0);
+  const [quotationCount, setQuotationCount] = useState(0);
+  const [isAttendanceMarked, setIsAttendanceMarked] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
-  const statCards = [
-    {
-      title: 'Total Customers',
-      value: customers.length.toString(),
-      icon: <Users className="h-8 w-8 text-blue-500" />,
-      description: `${customers.length} customers in database`,
-      color: 'bg-blue-50 dark:bg-blue-900/20'
-    },
-    {
-      title: 'Total Products',
-      value: products.length.toString(),
-      icon: <Package className="h-8 w-8 text-indigo-500" />,
-      description: `${getNewProductsThisWeek()} new products added this week`,
-      color: 'bg-indigo-50 dark:bg-indigo-900/20'
-    },
-    {
-      title: 'Quotations',
-      value: quotations.length.toString(),
-      icon: <FileText className="h-8 w-8 text-amber-500" />,
-      description: `${getQuotationsSentThisMonth()} sent this month`,
-      color: 'bg-amber-50 dark:bg-amber-900/20'
-    },
-    {
-      title: 'Invoices',
-      value: invoices.length.toString(),
-      icon: <FileInput className="h-8 w-8 text-emerald-500" />,
-      description: `₹${calculateTotalRevenue().toLocaleString('en-IN')} revenue generated`,
-      color: 'bg-emerald-50 dark:bg-emerald-900/20'
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const customers = await getCustomers();
+        const products = await getProducts();
+        const quotations = await getQuotations();
+        
+        setCustomerCount(customers.length);
+        setProductCount(products.length);
+        setQuotationCount(quotations.length);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        toast.error('Failed to load dashboard data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleMarkAttendance = async () => {
+    try {
+      await markAttendance();
+      setIsAttendanceMarked(true);
+      toast.success('Attendance marked successfully');
+    } catch (error) {
+      console.error('Error marking attendance:', error);
+      toast.error('Failed to mark attendance');
     }
-  ];
+  };
 
   return (
-    <>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Welcome, {userData?.displayName || 'User'}</h1>
-        <p className="text-gray-600 dark:text-gray-300">Here's what's happening with your business today</p>
+    <div className="p-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <p className="text-gray-500">Welcome back, {userData?.displayName || 'User'}</p>
+        </div>
+        <Button 
+          onClick={handleMarkAttendance} 
+          className="mt-4 md:mt-0"
+          disabled={isAttendanceMarked}
+        >
+          <Clock className="mr-2 h-4 w-4" />
+          {isAttendanceMarked ? 'Attendance Marked' : 'Mark Attendance'}
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-fade-in">
-        {statCards.map((card, index) => (
-          <Card 
-            key={index} 
-            className={`shadow-sm hover:shadow-md transition-all duration-300 border-none ${card.color} backdrop-blur-sm overflow-hidden`}
-          >
-            <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-200">{card.title}</CardTitle>
-              <div className="p-2 rounded-full bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
-                {card.icon}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-gray-800 dark:text-white">{card.value}</div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{card.description}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-4">
-        <Card className="shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border-none bg-white/70 dark:bg-gray-800/50 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="text-lg text-gray-800 dark:text-white flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-indigo-500" />
-              Recent Sales
-            </CardTitle>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="h-64 flex items-center justify-center border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800/30">
-              <TrendingUp className="h-12 w-12 text-gray-300 dark:text-gray-600 mr-2" />
-              <span className="text-gray-500 dark:text-gray-400">Sales chart will be displayed here</span>
+            <div className="text-2xl font-bold">{isLoading ? '...' : customerCount}</div>
+            <p className="text-xs text-muted-foreground pt-1">
+              <Button variant="link" className="p-0 h-auto text-xs" onClick={() => navigate('/dashboard/customers')}>
+                View all customers
+              </Button>
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Total Products</CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{isLoading ? '...' : productCount}</div>
+            <p className="text-xs text-muted-foreground pt-1">
+              <Button variant="link" className="p-0 h-auto text-xs" onClick={() => navigate('/dashboard/products')}>
+                View all products
+              </Button>
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Quotations</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{isLoading ? '...' : quotationCount}</div>
+            <p className="text-xs text-muted-foreground pt-1">
+              <Button variant="link" className="p-0 h-auto text-xs" onClick={() => navigate('/dashboard/quotations')}>
+                View all quotations
+              </Button>
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Account Type</CardTitle>
+            <UserCog className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold capitalize">{userData?.role || 'Employee'}</div>
+            <p className="text-xs text-muted-foreground pt-1">
+              Role-based access
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <Card className="col-span-1 lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+            <CardDescription>Frequently used actions</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Button className="justify-start" variant="outline" onClick={() => navigate('/dashboard/customers')}>
+                <Users className="mr-2 h-4 w-4" />
+                Add New Customer
+              </Button>
+              <Button className="justify-start" variant="outline" onClick={() => navigate('/dashboard/products')}>
+                <Package className="mr-2 h-4 w-4" />
+                Add New Product
+              </Button>
+              <Button className="justify-start" variant="outline" onClick={() => navigate('/dashboard/quotations')}>
+                <FileText className="mr-2 h-4 w-4" />
+                Create Quotation
+              </Button>
+              <Button className="justify-start" variant="outline" onClick={() => navigate('/dashboard/invoices')}>
+                <FileText className="mr-2 h-4 w-4" />
+                Generate Invoice
+              </Button>
             </div>
           </CardContent>
         </Card>
-        
-        <Card className="shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border-none bg-white/70 dark:bg-gray-800/50 backdrop-blur-sm">
+
+        <Card>
           <CardHeader>
-            <CardTitle className="text-lg text-gray-800 dark:text-white flex items-center gap-2">
-              <BarChart2 className="h-5 w-5 text-indigo-500" />
-              Top Products
-            </CardTitle>
+            <CardTitle>System Information</CardTitle>
+            <CardDescription>Solar Panel Management</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-64 flex items-center justify-center border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800/30">
-              <BarChart2 className="h-12 w-12 text-gray-300 dark:text-gray-600 mr-2" />
-              <span className="text-gray-500 dark:text-gray-400">Product stats will be displayed here</span>
-            </div>
+            <Tabs defaultValue="about">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="about">About</TabsTrigger>
+                <TabsTrigger value="help">Help</TabsTrigger>
+              </TabsList>
+              <TabsContent value="about" className="space-y-4 mt-4">
+                <p className="text-sm">
+                  Prakash Green Energy Dashboard provides comprehensive tools for solar panel business management.
+                </p>
+                <p className="text-sm">
+                  Version: 1.0.0
+                </p>
+              </TabsContent>
+              <TabsContent value="help" className="space-y-4 mt-4">
+                <p className="text-sm">
+                  Need assistance? Contact our support team:
+                </p>
+                <p className="text-sm">
+                  Email: support@prakashgreenenergy.com
+                </p>
+                <p className="text-sm">
+                  Phone: +91-XXXXXXXXXX
+                </p>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>
-    </>
+    </div>
   );
 };
 

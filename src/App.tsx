@@ -21,23 +21,11 @@ import Invoices from "./pages/dashboard/Invoices";
 import UserManagement from "./pages/dashboard/UserManagement";
 import Attendance from "./pages/dashboard/Attendance";
 
-// Layouts
-import DashboardLayout from "./components/dashboard/DashboardLayout";
-
 // Routes
 import ProtectedRoute from "./components/ProtectedRoute";
 import RoleRoute from "./components/RoleRoute";
 
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      refetchOnWindowFocus: true,
-    },
-  },
-});
+const queryClient = new QueryClient();
 
 // Firebase configuration check
 const firebaseConfigured = () => {
@@ -96,55 +84,44 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/signin" element={<SignIn />} />
               <Route path="/signup" element={<SignUp />} />
               
-              {/* Dashboard routes with layout */}
               <Route path="/dashboard" element={
                 <ProtectedRoute>
-                  <DashboardLayout>
-                    <Dashboard />
-                  </DashboardLayout>
+                  <Dashboard />
                 </ProtectedRoute>
               } />
               
               <Route path="/dashboard/customers" element={
                 <ProtectedRoute>
-                  <DashboardLayout>
-                    <Customers />
-                  </DashboardLayout>
+                  <Customers />
                 </ProtectedRoute>
               } />
               
               <Route path="/dashboard/products" element={
                 <ProtectedRoute>
-                  <DashboardLayout>
-                    <Products />
-                  </DashboardLayout>
+                  <Products />
                 </ProtectedRoute>
               } />
               
               <Route path="/dashboard/quotations" element={
                 <ProtectedRoute>
-                  <DashboardLayout>
-                    <Quotations />
-                  </DashboardLayout>
+                  <Quotations />
                 </ProtectedRoute>
               } />
               
               <Route path="/dashboard/invoices" element={
                 <ProtectedRoute>
                   <RoleRoute allowedRoles={['master_admin', 'admin']}>
-                    <DashboardLayout>
-                      <Invoices />
-                    </DashboardLayout>
+                    <Invoices />
                   </RoleRoute>
                 </ProtectedRoute>
               } />
@@ -152,9 +129,7 @@ const App = () => {
               <Route path="/dashboard/users" element={
                 <ProtectedRoute>
                   <RoleRoute allowedRoles={['master_admin']}>
-                    <DashboardLayout>
-                      <UserManagement />
-                    </DashboardLayout>
+                    <UserManagement />
                   </RoleRoute>
                 </ProtectedRoute>
               } />
@@ -162,18 +137,16 @@ const App = () => {
               <Route path="/dashboard/attendance" element={
                 <ProtectedRoute>
                   <RoleRoute allowedRoles={['master_admin', 'admin']}>
-                    <DashboardLayout>
-                      <Attendance />
-                    </DashboardLayout>
+                    <Attendance />
                   </RoleRoute>
                 </ProtectedRoute>
               } />
               
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </TooltipProvider>
-        </AuthProvider>
-      </BrowserRouter>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 };
