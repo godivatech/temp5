@@ -29,9 +29,9 @@ const CreateInvoice = () => {
       try {
         setIsLoading(true);
         const data = await getQuotations();
-        // Filter only approved quotations
-        const approvedQuotations = data.filter(q => q.status === 'approved');
-        setQuotations(approvedQuotations);
+        // Filter only accepted quotations (previously was using "approved" which is not in the status type)
+        const acceptedQuotations = data.filter(q => q.status === 'accepted');
+        setQuotations(acceptedQuotations);
       } catch (error: any) {
         console.error('Error loading quotations:', error);
         toast.error('Failed to load quotations');
@@ -130,7 +130,7 @@ const CreateInvoice = () => {
                         ))
                       ) : (
                         <SelectItem value="no-quotations" disabled>
-                          No approved quotations available
+                          No accepted quotations available
                         </SelectItem>
                       )}
                     </SelectContent>
@@ -224,7 +224,7 @@ const CreateInvoice = () => {
                         <tbody className="bg-white divide-y divide-gray-200">
                           {selectedQuotation.items.map((item, index) => (
                             <tr key={index}>
-                              <td className="px-4 py-3 whitespace-nowrap text-sm">{item.name}</td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm">{item.productName}</td>
                               <td className="px-4 py-3 whitespace-nowrap text-sm text-right">{item.quantity}</td>
                               <td className="px-4 py-3 whitespace-nowrap text-sm text-right">₹{item.unitPrice?.toLocaleString() || '0'}</td>
                               <td className="px-4 py-3 whitespace-nowrap text-sm text-right">₹{((item.quantity || 0) * (item.unitPrice || 0)).toLocaleString()}</td>
