@@ -44,7 +44,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUserData(data);
         } catch (error) {
           console.error('Error fetching user data:', error);
-          toast.error('Failed to fetch user data');
+          
+          // Only show toast if it's not an offline error
+          if (!(error instanceof Error && error.message.includes('offline'))) {
+            toast.error('Failed to fetch user data');
+          }
         }
       } else {
         setUserData(null);
@@ -59,6 +63,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
+      
+      // Check if we're online before attempting to login
+      if (!navigator.onLine) {
+        throw new Error('You are currently offline. Please check your internet connection and try again.');
+      }
+      
       const data = await loginUser(email, password);
       return data;
     } catch (error: any) {
