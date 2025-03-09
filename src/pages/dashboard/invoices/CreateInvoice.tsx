@@ -125,7 +125,7 @@ const CreateInvoice = () => {
             dueDate: new Date(new Date().setDate(new Date().getDate() + 30)),
             items: items.length > 0 ? items : [{ productName: '', quantity: 1, unitPrice: 0, totalPrice: 0 }],
             totalAmount: selected.totalAmount || 0,
-            notes: selected.notes,
+            notes: selected.notes || '', // Handle undefined notes
             status: 'draft',
           });
         }
@@ -402,7 +402,7 @@ const CreateInvoice = () => {
                         <TableHead>Unit</TableHead>
                         <TableHead>Unit Price (₹)</TableHead>
                         <TableHead>Total (₹)</TableHead>
-                        <TableHead width={100}></TableHead>
+                        <TableHead className="w-[100px]"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
