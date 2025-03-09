@@ -93,21 +93,26 @@ export interface AttendanceRecord {
     status: 'present' | 'absent' | 'late' | 'half-day';
 }
 
-// Quotation Interface
+// QuotationItem Interface - adding this for use in Quotations
+export interface QuotationItem {
+    productId: string;
+    productName: string;
+    quantity: number;
+    unit: string;
+    unitPrice: number;
+    totalPrice: number;
+}
+
+// Quotation Interface with updated status type
 export interface Quotation {
     id?: string;
     customerId?: string;
     customerName?: string;
     quotationNumber?: string;
     date?: string;
-    items?: Array<{
-        name?: string;
-        description?: string;
-        quantity?: number;
-        unitPrice?: number;
-    }>;
+    items: QuotationItem[];
     totalAmount?: number;
-    status?: 'pending' | 'approved' | 'rejected' | 'draft';
+    status?: 'draft' | 'sent' | 'accepted' | 'rejected';
     notes?: string;
     createdAt?: string;
     updatedAt?: string;
@@ -127,6 +132,9 @@ export interface Invoice {
     description?: string;
     quantity?: number;
     unitPrice?: number;
+    productName?: string; // Added to match usage in component
+    unit?: string; // Added to match usage in component
+    totalPrice?: number; // Added to match usage in component
   }>;
   totalAmount?: number;
   status?: 'pending' | 'paid' | 'overdue';
@@ -465,10 +473,13 @@ export const getQuotations = async (): Promise<Quotation[]> => {
     }
 };
 
-export const createQuotation = async (quotationData: Quotation): Promise<Quotation> => {
+export const createQuotation = async (quotationData: Omit<Quotation, 'id' | 'createdAt'>): Promise<Quotation> => {
     try {
         const quotationsCollection = collection(db, "quotations");
-        const docRef = await addDoc(quotationsCollection, quotationData);
+        const docRef = await addDoc(quotationsCollection, {
+            ...quotationData,
+            createdAt: new Date().toISOString()
+        });
         const docSnapshot = await getDoc(docRef);
         return {
             id: docSnapshot.id,
