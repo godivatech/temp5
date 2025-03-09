@@ -5,21 +5,19 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { useEffect } from "react";
 import { initializeApp } from "firebase/app";
 
-// Auth Pages
+// Pages
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import SignIn from "./pages/auth/SignIn";
 import SignUp from "./pages/auth/SignUp";
-
-// Dashboard Pages
 import Dashboard from "./pages/dashboard/Dashboard";
 import Customers from "./pages/dashboard/Customers";
 import Products from "./pages/dashboard/Products";
 import Quotations from "./pages/dashboard/Quotations";
 import Invoices from "./pages/dashboard/Invoices";
-import InvoiceCreate from "./pages/dashboard/InvoiceCreate";
 import UserManagement from "./pages/dashboard/UserManagement";
 import Attendance from "./pages/dashboard/Attendance";
 
@@ -52,51 +50,6 @@ const firebaseConfigured = () => {
     return false;
   }
 };
-
-// Define route structure
-const routes = [
-  // Public routes
-  { path: "/", element: <Index /> },
-  { path: "/signin", element: <SignIn /> },
-  { path: "/signup", element: <SignUp /> },
-  
-  // Protected dashboard routes
-  { 
-    path: "/dashboard", 
-    element: <ProtectedRoute><Dashboard /></ProtectedRoute>
-  },
-  { 
-    path: "/dashboard/customers", 
-    element: <ProtectedRoute><Customers /></ProtectedRoute>
-  },
-  { 
-    path: "/dashboard/products", 
-    element: <ProtectedRoute><Products /></ProtectedRoute>
-  },
-  { 
-    path: "/dashboard/quotations", 
-    element: <ProtectedRoute><Quotations /></ProtectedRoute>
-  },
-  { 
-    path: "/dashboard/invoices", 
-    element: <ProtectedRoute><Invoices /></ProtectedRoute>
-  },
-  { 
-    path: "/dashboard/invoices/create", 
-    element: <ProtectedRoute><InvoiceCreate /></ProtectedRoute>
-  },
-  { 
-    path: "/dashboard/attendance", 
-    element: <ProtectedRoute><RoleRoute allowedRoles={['master_admin', 'admin']}><Attendance /></RoleRoute></ProtectedRoute>
-  },
-  { 
-    path: "/dashboard/users", 
-    element: <ProtectedRoute><RoleRoute allowedRoles={['master_admin']}><UserManagement /></RoleRoute></ProtectedRoute>
-  },
-  
-  // Fallback routes
-  { path: "*", element: <NotFound /> }
-];
 
 const App = () => {
   const isFirebaseConfigured = firebaseConfigured();
@@ -136,9 +89,59 @@ const App = () => {
           <Sonner />
           <BrowserRouter>
             <Routes>
-              {routes.map((route, index) => (
-                <Route key={index} path={route.path} element={route.element} />
-              ))}
+              <Route path="/" element={<Index />} />
+              <Route path="/signin" element={<SignIn />} />
+              <Route path="/signup" element={<SignUp />} />
+              
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/dashboard/customers" element={
+                <ProtectedRoute>
+                  <Customers />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/dashboard/products" element={
+                <ProtectedRoute>
+                  <Products />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/dashboard/quotations" element={
+                <ProtectedRoute>
+                  <Quotations />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/dashboard/invoices" element={
+                <ProtectedRoute>
+                  <RoleRoute allowedRoles={['master_admin', 'admin']}>
+                    <Invoices />
+                  </RoleRoute>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/dashboard/users" element={
+                <ProtectedRoute>
+                  <RoleRoute allowedRoles={['master_admin']}>
+                    <UserManagement />
+                  </RoleRoute>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/dashboard/attendance" element={
+                <ProtectedRoute>
+                  <RoleRoute allowedRoles={['master_admin', 'admin']}>
+                    <Attendance />
+                  </RoleRoute>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>

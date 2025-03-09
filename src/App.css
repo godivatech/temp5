@@ -2,9 +2,9 @@
 #root {
   max-width: 100%;
   margin: 0 auto;
+  text-align: center;
 }
 
-/* Base Styling */
 .logo {
   height: 6em;
   padding: 1.5em;
@@ -31,6 +31,14 @@
   a:nth-of-type(2) .logo {
     animation: logo-spin infinite 20s linear;
   }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
 }
 
 /* Enhanced UI Styling */
@@ -69,6 +77,14 @@
   background: linear-gradient(135deg, #f5f7ff 0%, #eef2ff 100%);
 }
 
+.sidebar-item {
+  @apply flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-200 border-l-2 border-transparent hover:border-indigo-500;
+}
+
+.sidebar-item.active {
+  @apply bg-indigo-50 text-indigo-600 font-medium border-l-2 border-indigo-500;
+}
+
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -80,21 +96,12 @@
   to { transform: translateY(0); opacity: 1; }
 }
 
-@keyframes scaleIn {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
 .fade-in {
   animation: fadeIn 0.5s ease-out forwards;
 }
 
 .slide-in {
   animation: slideIn 0.3s ease-out forwards;
-}
-
-.scale-in {
-  animation: scaleIn 0.3s ease-out forwards;
 }
 
 .page-transition {
@@ -166,34 +173,4 @@
 
 .animation-delay-600 {
   animation-delay: 0.6s;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .responsive-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .responsive-flex {
-    flex-direction: column;
-  }
-}
-
-/* Colors */
-.text-indigo {
-  color: #4f46e5;
-}
-
-.bg-indigo {
-  background-color: #4f46e5;
-}
-
-.bg-indigo-gradient {
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-}
-
-/* Add semi-transparent overlay for modals and drawers */
-.modal-overlay {
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(2px);
 }

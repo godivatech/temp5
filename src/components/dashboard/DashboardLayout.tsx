@@ -1,8 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
-import { cn } from "@/lib/utils";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -17,32 +16,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   subtitle,
   actions 
 }) => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    const saved = localStorage.getItem('sidebarCollapsed');
-    return saved ? JSON.parse(saved) : false;
-  });
-
-  // Save sidebar state to localStorage
-  useEffect(() => {
-    localStorage.setItem('sidebarCollapsed', JSON.stringify(sidebarCollapsed));
-  }, [sidebarCollapsed]);
-
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-50 to-blue-50 overflow-hidden">
-      <Sidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />
-      <div className={cn(
-        "flex-1 flex flex-col overflow-hidden transition-all duration-300",
-        sidebarCollapsed ? "ml-[70px]" : "ml-[240px]"
-      )}>
-        <Header 
-          title={title} 
-          subtitle={subtitle} 
-          actions={actions} 
-          toggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
-          sidebarCollapsed={sidebarCollapsed}
-        />
+      <Sidebar />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header title={title} subtitle={subtitle} actions={actions} />
         <main className="flex-1 overflow-y-auto p-4">
-          <div className="max-w-full mx-auto">
+          <div className="max-w-7xl mx-auto">
             {children}
           </div>
         </main>
