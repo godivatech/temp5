@@ -13,11 +13,14 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import SignIn from "./pages/auth/SignIn";
 import SignUp from "./pages/auth/SignUp";
+
+// Dashboard Pages
 import Dashboard from "./pages/dashboard/Dashboard";
 import Customers from "./pages/dashboard/Customers";
 import Products from "./pages/dashboard/Products";
 import Quotations from "./pages/dashboard/Quotations";
 import Invoices from "./pages/dashboard/Invoices";
+import CreateInvoice from "./pages/dashboard/invoices/CreateInvoice";
 import UserManagement from "./pages/dashboard/UserManagement";
 import Attendance from "./pages/dashboard/Attendance";
 
@@ -89,42 +92,55 @@ const App = () => {
           <Sonner />
           <BrowserRouter>
             <Routes>
+              {/* Public Routes */}
               <Route path="/" element={<Index />} />
               <Route path="/signin" element={<SignIn />} />
               <Route path="/signup" element={<SignUp />} />
               
+              {/* Dashboard Routes */}
               <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <Dashboard />
                 </ProtectedRoute>
               } />
               
+              {/* Customer Management */}
               <Route path="/dashboard/customers" element={
                 <ProtectedRoute>
                   <Customers />
                 </ProtectedRoute>
               } />
               
+              {/* Product Management */}
               <Route path="/dashboard/products" element={
                 <ProtectedRoute>
                   <Products />
                 </ProtectedRoute>
               } />
               
+              {/* Quotation Management */}
               <Route path="/dashboard/quotations" element={
                 <ProtectedRoute>
                   <Quotations />
                 </ProtectedRoute>
               } />
               
+              {/* Invoice Management */}
               <Route path="/dashboard/invoices" element={
                 <ProtectedRoute>
+                  <Invoices />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/dashboard/invoices/create" element={
+                <ProtectedRoute>
                   <RoleRoute allowedRoles={['master_admin', 'admin']}>
-                    <Invoices />
+                    <CreateInvoice />
                   </RoleRoute>
                 </ProtectedRoute>
               } />
               
+              {/* Admin Routes */}
               <Route path="/dashboard/users" element={
                 <ProtectedRoute>
                   <RoleRoute allowedRoles={['master_admin']}>
@@ -141,6 +157,7 @@ const App = () => {
                 </ProtectedRoute>
               } />
               
+              {/* Fallback Route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

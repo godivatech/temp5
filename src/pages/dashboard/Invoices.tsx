@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getInvoices, Invoice } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -8,14 +9,15 @@ import { Input } from '@/components/ui/input';
 import { DataTable } from '@/components/ui/data-table';
 import { Column } from '@/components/ui/data-table-types';
 import { toast } from 'sonner';
-import { Download, Search } from 'lucide-react';
+import { Download, Search, Plus } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 
 const Invoices = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const { userData } = useAuth();
+  const { userData, hasRole } = useAuth();
+  const navigate = useNavigate();
 
   const columns: Column<Invoice>[] = [
     {
@@ -27,6 +29,9 @@ const Invoices = () => {
       key: 'customerName',
       title: 'Customer',
       accessorKey: 'customerName',
+      cell: ({ row }: { row: any }) => (
+        <span>{row.original.customerName || 'Unknown Customer'}</span>
+      ),
     },
     {
       key: 'totalAmount',
@@ -43,6 +48,25 @@ const Invoices = () => {
       cell: ({ row }: { row: any }) => (
         <span>{row.original.createdAt ? new Date(row.original.createdAt).toLocaleDateString() : 'N/A'}</span>
       ),
+    },
+    {
+      key: 'status',
+      title: 'Status',
+      accessorKey: 'status',
+      cell: ({ row }: { row: any }) => {
+        const status = row.original.status || 'pending';
+        const statusClasses = {
+          pending: 'bg-yellow-100 text-yellow-800',
+          paid: 'bg-green-100 text-green-800',
+          overdue: 'bg-red-100 text-red-800',
+        };
+        
+        return (
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusClasses[status as keyof typeof statusClasses] || 'bg-gray-100 text-gray-800'}`}>
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+          </span>
+        );
+      },
     },
     {
       key: 'actions',
@@ -95,7 +119,17 @@ const Invoices = () => {
   );
 
   return (
-    <DashboardLayout title="Invoices">
+    <DashboardLayout 
+      title="Invoices"
+      actions={
+        hasRole(['master_admin', 'admin']) && (
+          <Button onClick={() => navigate('/dashboard/invoices/create')}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Invoice
+          </Button>
+        )
+      }
+    >
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Invoices</h1>
@@ -119,6 +153,7 @@ const Invoices = () => {
               columns={columns}
               data={filteredInvoices}
               isLoading={isLoading}
+              primaryKey="id"
             />
           </CardContent>
         </Card>

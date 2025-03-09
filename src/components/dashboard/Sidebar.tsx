@@ -8,12 +8,13 @@ import {
   Users,
   Package,
   FileText,
-  FileInput,
+  File,
   UserCog,
   Clock,
   LogOut,
   Menu,
   Sun,
+  Plus,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -21,18 +22,23 @@ import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface SidebarProps {
+  collapsed: boolean;
+  setCollapsed: (collapsed: boolean) => void;
   children?: React.ReactNode;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+export const Sidebar: React.FC<SidebarProps> = ({ 
+  collapsed, 
+  setCollapsed, 
+  children 
+}) => {
   const { pathname } = useLocation();
   const { logout, userData, hasRole } = useAuth();
   const isMobile = useIsMobile();
   const [isMobileExpanded, setIsMobileExpanded] = useState(false);
 
   const toggleSidebar = () => {
-    setIsExpanded(!isExpanded);
+    setCollapsed(!collapsed);
   };
 
   const toggleMobileSidebar = () => {
@@ -74,8 +80,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
     },
     {
       title: 'Invoices',
-      icon: FileInput,
+      icon: File,
       path: '/dashboard/invoices',
+      roles: ['master_admin', 'admin', 'employee'],
+    },
+  ];
+
+  const invoiceSubItems = [
+    {
+      title: 'Create Invoice',
+      icon: Plus,
+      path: '/dashboard/invoices/create',
       roles: ['master_admin', 'admin'],
     },
   ];
@@ -99,15 +114,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
     return hasRole(item.roles as any[]);
   };
 
-  const renderNavItems = (items: typeof mainNavItems) => {
+  const isActive = (path: string) => {
+    if (path === '/dashboard') {
+      return pathname === path;
+    }
+    return pathname.startsWith(path);
+  };
+
+  const renderNavItems = (items: typeof mainNavItems, isSubItem = false) => {
     return items.filter(isVisible).map((item) => (
       <NavLink
         key={item.path}
         to={item.path}
-        className={({ isActive }) =>
+        className={({ isActive: active }) =>
           cn(
             'sidebar-item group',
-            isActive && 'active'
+            active && 'active',
+            isSubItem && 'pl-8 text-sm',
+            !collapsed || (isMobile && isMobileExpanded) ? 'py-2' : 'py-3 justify-center'
           )
         }
         onClick={isMobile ? () => setIsMobileExpanded(false) : undefined}
@@ -115,11 +139,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         <item.icon
           className={cn(
             'h-5 w-5 shrink-0 transition-transform group-hover:scale-110',
-            pathname === item.path ? 'text-indigo-600' : 'text-gray-500'
+            isActive(item.path) ? 'text-indigo-600' : 'text-gray-500'
           )}
         />
-        {(isExpanded || (isMobile && isMobileExpanded)) && (
-          <span>{item.title}</span>
+        {(!collapsed || (isMobile && isMobileExpanded)) && (
+          <span className={isSubItem ? 'text-xs' : ''}>{item.title}</span>
         )}
       </NavLink>
     ));
@@ -130,11 +154,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
     <aside
       className={cn(
         'h-screen bg-white border-r border-indigo-100 transition-all duration-300 shadow-sm flex flex-col',
-        isExpanded ? 'w-64' : 'w-20'
+        collapsed ? 'w-20' : 'w-64'
       )}
     >
       <div className="h-16 flex items-center px-4 border-b border-indigo-100">
-        {isExpanded ? (
+        {!collapsed ? (
           <div className="flex items-center">
             <Sun className="h-6 w-6 text-indigo-500 mr-2" />
             <h2 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-green-500">Prakash Green</h2>
@@ -152,11 +176,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         <nav className="flex flex-col gap-1">
           {renderNavItems(mainNavItems)}
 
+          {/* Display Invoices sub-items only if Invoices main item is visible */}
+          {hasRole(['master_admin', 'admin']) && (
+            <>
+              {renderNavItems(invoiceSubItems, true)}
+            </>
+          )}
+
           {(hasRole(['master_admin']) || hasRole(['admin'])) && (
             <>
               <div className="my-2 border-t border-indigo-100" />
               <p className="px-3 text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">
-                {isExpanded ? 'Administration' : 'Admin'}
+                {!collapsed ? 'Administration' : 'Admin'}
               </p>
               {renderNavItems(adminNavItems)}
             </>
@@ -167,18 +198,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       <div className="border-t border-indigo-100 bg-white p-3">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3 rounded-md py-1">
-            {isExpanded && (
+            {!collapsed && (
               <>
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-8 rounded-full bg-gradient-to-r from-indigo-500 to-green-500 text-white flex items-center justify-center">
                     <span className="text-sm font-medium">
-                      {userData?.displayName?.charAt(0).toUpperCase()}
+                      {userData?.displayName?.charAt(0)?.toUpperCase() || 'U'}
                     </span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium">{userData?.displayName}</span>
+                    <span className="text-sm font-medium">{userData?.displayName || 'User'}</span>
                     <span className="text-xs text-gray-500 capitalize">
-                      {userData?.role?.replace('_', ' ')}
+                      {userData?.role?.replace('_', ' ') || 'Role'}
                     </span>
                   </div>
                 </div>
@@ -188,7 +219,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
               className="ml-auto flex h-8 w-8 items-center justify-center rounded-md hover:bg-indigo-50 text-indigo-500"
               onClick={toggleSidebar}
             >
-              {isExpanded ? (
+              {!collapsed ? (
                 <ChevronLeft className="h-5 w-5" />
               ) : (
                 <ChevronRight className="h-5 w-5" />
@@ -202,7 +233,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
             className="w-full gap-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:text-indigo-800 hover:border-indigo-300"
           >
             <LogOut className="h-4 w-4" />
-            {isExpanded && <span>Logout</span>}
+            {!collapsed && <span>Logout</span>}
           </Button>
         </div>
       </div>
@@ -250,6 +281,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
           <div className="flex-1 overflow-auto py-2 px-3">
             <nav className="flex flex-col gap-1">
               {renderNavItems(mainNavItems)}
+              
+              {/* Display Invoices sub-items only if Invoices main item is visible */}
+              {hasRole(['master_admin', 'admin']) && (
+                <>
+                  {renderNavItems(invoiceSubItems, true)}
+                </>
+              )}
 
               {(hasRole(['master_admin']) || hasRole(['admin'])) && (
                 <>
@@ -269,13 +307,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-8 rounded-full bg-gradient-to-r from-indigo-500 to-green-500 text-white flex items-center justify-center">
                     <span className="text-sm font-medium">
-                      {userData?.displayName?.charAt(0).toUpperCase()}
+                      {userData?.displayName?.charAt(0)?.toUpperCase() || 'U'}
                     </span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium">{userData?.displayName}</span>
+                    <span className="text-sm font-medium">{userData?.displayName || 'User'}</span>
                     <span className="text-xs text-gray-500 capitalize">
-                      {userData?.role?.replace('_', ' ')}
+                      {userData?.role?.replace('_', ' ') || 'Role'}
                     </span>
                   </div>
                 </div>
