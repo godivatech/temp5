@@ -37,19 +37,23 @@ const Quotations = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   
+  // Resources
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   
+  // Form state
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedQuotation, setSelectedQuotation] = useState<Quotation | null>(null);
   
+  // New quotation form state
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [quotationItems, setQuotationItems] = useState<QuotationItem[]>([]);
   const [selectedProductId, setSelectedProductId] = useState('');
   const [selectedQuantity, setSelectedQuantity] = useState(1);
   
+  // Edit status
   const [isEditStatusDialogOpen, setIsEditStatusDialogOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<'draft' | 'sent' | 'accepted' | 'rejected'>('draft');
 
@@ -64,6 +68,7 @@ const Quotations = () => {
   }, [searchTerm, quotations]);
 
   useEffect(() => {
+    // Set selected customer when customer ID changes
     const customer = customers.find(c => c.id === selectedCustomerId);
     setSelectedCustomer(customer || null);
   }, [selectedCustomerId, customers]);
@@ -139,9 +144,11 @@ const Quotations = () => {
       return;
     }
     
+    // Check if product already in the list
     const existingItemIndex = quotationItems.findIndex(item => item.productId === selectedProductId);
     
     if (existingItemIndex !== -1) {
+      // Update quantity of existing item
       const updatedItems = [...quotationItems];
       const newQuantity = updatedItems[existingItemIndex].quantity + selectedQuantity;
       
@@ -158,6 +165,7 @@ const Quotations = () => {
       
       setQuotationItems(updatedItems);
     } else {
+      // Add new item
       const newItem: QuotationItem = {
         productId: product.id || '',
         productName: product.name,
@@ -170,6 +178,7 @@ const Quotations = () => {
       setQuotationItems([...quotationItems, newItem]);
     }
     
+    // Reset selection
     setSelectedProductId('');
     setSelectedQuantity(1);
   };
@@ -197,7 +206,7 @@ const Quotations = () => {
     try {
       const totalAmount = quotationItems.reduce((sum, item) => sum + item.totalPrice, 0);
       
-      const newQuotation: Omit<Quotation, 'id' | 'createdAt'> = {
+      const newQuotation: Omit<Quotation, 'id' | 'createdAt' | 'createdBy'> = {
         customerId: selectedCustomerId,
         customerName: selectedCustomer.name,
         items: quotationItems,
@@ -208,10 +217,12 @@ const Quotations = () => {
       await createQuotation(newQuotation);
       toast.success('Quotation created successfully');
       
+      // Reset form
       setSelectedCustomerId('');
       setQuotationItems([]);
       setIsAddDialogOpen(false);
       
+      // Refresh quotations
       await fetchQuotations();
     } catch (error) {
       console.error('Error creating quotation:', error);
@@ -255,6 +266,7 @@ const Quotations = () => {
     setIsEditStatusDialogOpen(true);
   };
 
+  // Pagination
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredQuotations.slice(indexOfFirstItem, indexOfLastItem);
@@ -524,6 +536,7 @@ const Quotations = () => {
                       </PaginationItem>
                       
                       {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        // Logic to show pages around current page
                         let pageNum = currentPage;
                         if (currentPage <= 3) {
                           pageNum = i + 1;
@@ -533,6 +546,7 @@ const Quotations = () => {
                           pageNum = currentPage - 2 + i;
                         }
                         
+                        // Ensure page numbers are valid
                         if (pageNum <= totalPages && pageNum > 0) {
                           return (
                             <PaginationItem key={pageNum}>
@@ -567,6 +581,7 @@ const Quotations = () => {
         </CardContent>
       </Card>
 
+      {/* View Quotation Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
@@ -633,6 +648,7 @@ const Quotations = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Edit Status Dialog */}
       <Dialog open={isEditStatusDialogOpen} onOpenChange={setIsEditStatusDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

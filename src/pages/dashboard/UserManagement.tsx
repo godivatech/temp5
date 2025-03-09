@@ -9,6 +9,8 @@ import { DataTable } from '@/components/ui/data-table';
 import { Column } from '@/components/ui/data-table-types';
 import { toast } from 'sonner';
 import { Search, UserCog } from 'lucide-react';
+import { Header } from '@/components/dashboard/Header';
+import { Sidebar } from '@/components/dashboard/Sidebar';
 import {
   Select,
   SelectContent,
@@ -24,7 +26,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 
 const UserManagement = () => {
   const [users, setUsers] = useState<UserData[]>([]);
@@ -108,7 +109,7 @@ const UserManagement = () => {
       title: 'Joined',
       accessorKey: 'createdAt',
       cell: ({ row }: { row: any }) => (
-        <span>{row.original.createdAt ? new Date(row.original.createdAt).toLocaleDateString() : 'N/A'}</span>
+        <span>{new Date(row.original.createdAt).toLocaleDateString()}</span>
       ),
     },
     {
@@ -132,83 +133,86 @@ const UserManagement = () => {
   ];
 
   const filteredUsers = users.filter((user) =>
-    user.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.role?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const tableActions = (
-    <div className="relative w-64">
-      <Input
-        placeholder="Search users..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="pl-10"
-      />
-      <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-    </div>
+    user.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.role.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <DashboardLayout
-      title="User Management"
-      subtitle="Manage user roles and permissions"
-      actions={tableActions}
-    >
-      <div className="max-w-7xl mx-auto">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle>All Users</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              columns={columns}
-              data={filteredUsers}
-              isLoading={isLoading}
-            />
-          </CardContent>
-        </Card>
-
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit User Role</DialogTitle>
-              <DialogDescription>
-                Change the role for {selectedUser?.displayName}
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="grid gap-4 py-4">
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Current Role: {selectedUser?.role}</p>
-                <Select
-                  value={newRole}
-                  onValueChange={(value) => setNewRole(value as UserRole)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select new role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="master_admin">Master Admin</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="employee">Employee</SelectItem>
-                  </SelectContent>
-                </Select>
+    <div className="flex h-screen bg-gray-100">
+      <Sidebar />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header title="User Management" />
+        <main className="flex-1 overflow-y-auto p-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-2xl font-bold">User Management</h1>
+              <div className="relative w-64">
+                <Input
+                  placeholder="Search users..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
               </div>
             </div>
-            
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleRoleChange}>
-                Update Role
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle>All Users</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DataTable
+                  columns={columns}
+                  data={filteredUsers}
+                  isLoading={isLoading}
+                />
+              </CardContent>
+            </Card>
+
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Edit User Role</DialogTitle>
+                  <DialogDescription>
+                    Change the role for {selectedUser?.displayName}
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <div className="grid gap-4 py-4">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Current Role: {selectedUser?.role}</p>
+                    <Select
+                      value={newRole}
+                      onValueChange={(value) => setNewRole(value as UserRole)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select new role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="master_admin">Master Admin</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="employee">Employee</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleRoleChange}>
+                    Update Role
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </main>
       </div>
-    </DashboardLayout>
+    </div>
   );
 };
 

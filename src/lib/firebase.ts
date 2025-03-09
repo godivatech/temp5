@@ -1,26 +1,28 @@
 
-import { initializeApp } from "firebase/app";
-import { getAuth, 
-    signInWithEmailAndPassword, 
-    createUserWithEmailAndPassword, 
-    signOut, 
-    onAuthStateChanged,
-    updateProfile
-} from "firebase/auth";
-import { getFirestore, 
-    collection, 
-    addDoc, 
-    getDocs, 
-    getDoc, 
-    doc, 
-    updateDoc, 
-    deleteDoc,
-    query,
-    where,
-    setDoc 
-} from "firebase/firestore";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { getDatabase, ref as dbRef, onValue } from "firebase/database";
+import { initializeApp } from 'firebase/app';
+import { 
+  getAuth, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged,
+  updateProfile,
+  User as FirebaseUser
+} from 'firebase/auth';
+import { 
+  getDatabase, 
+  ref, 
+  set, 
+  get, 
+  update, 
+  remove, 
+  push, 
+  query, 
+  orderByChild, 
+  equalTo,
+  onValue,
+  DatabaseReference
+} from 'firebase/database';
 
 const firebaseConfig = {
   apiKey: "AIzaSyBo8D4pTG6oNGg4qy7V4AaC73qfAB0HRcc",
@@ -33,601 +35,850 @@ const firebaseConfig = {
   measurementId: "G-2S9TJM6E3C"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
 const database = getDatabase(app);
 
-// Firebase Authentication Types
-export type FirebaseUser = {
-    uid: string;
-    email: string | null;
-    displayName: string | null;
-    emailVerified: boolean;
-};
-
+// Role types
 export type UserRole = 'master_admin' | 'admin' | 'employee';
 
-// User Data Type
+// User data type
 export interface UserData {
-    uid: string;
-    email: string;
-    displayName: string;
-    phoneNumber: string;
-    role: UserRole;
-    createdAt?: string;
+  uid: string;
+  email: string;
+  displayName: string;
+  phoneNumber: string;
+  role: UserRole;
+  createdAt: number;
 }
 
-// Customer Interface
+// Customer type
 export interface Customer {
-    id?: string;
-    name: string;
-    email: string;
-    address: string;
-    location: string;
-    scope?: string;
+  id?: string;
+  name: string;
+  address: string;
+  email: string;
+  location: string;
+  scope: string;
+  createdAt: number;
+  createdBy: string;
 }
 
-// Product Interface
+// Product type
 export interface Product {
-    id?: string;
-    name: string;
-    type: string;
-    voltage: string;
-    rating: string;
-    make: string;
-    quantity: number;
-    unit: string;
-    price: number;
+  id?: string;
+  name: string;
+  type: string;
+  voltage: string;
+  rating: string;
+  make: string;
+  quantity: number;
+  unit: string;
+  price: number;
+  createdAt: number;
+  createdBy: string;
 }
 
-// Attendance Record Interface
-export interface AttendanceRecord {
-    id?: string;
-    userId: string;
-    userName: string;
-    date: string;
-    timeIn: string;
-    timeOut?: string;
-    status: 'present' | 'absent' | 'late' | 'half-day';
-}
-
-// QuotationItem Interface - adding this for use in Quotations
+// Quotation type
 export interface QuotationItem {
-    productId: string;
-    productName: string;
-    quantity: number;
-    unit: string;
-    unitPrice: number;
-    totalPrice: number;
+  productId: string;
+  productName: string;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+  totalPrice: number;
 }
 
-// Quotation Interface with updated status type
 export interface Quotation {
-    id?: string;
-    customerId?: string;
-    customerName?: string;
-    quotationNumber?: string;
-    date?: string;
-    items: QuotationItem[];
-    totalAmount?: number;
-    status?: 'draft' | 'sent' | 'accepted' | 'rejected';
-    notes?: string;
-    createdAt?: string;
-    updatedAt?: string;
+  id?: string;
+  customerId: string;
+  customerName: string;
+  items: QuotationItem[];
+  totalAmount: number;
+  createdAt: number;
+  createdBy: string;
+  status: 'draft' | 'sent' | 'accepted' | 'rejected';
 }
 
-// Add this to the existing types:
+// Invoice type
 export interface Invoice {
   id?: string;
-  invoiceNumber?: string;
-  quotationId?: string;
-  customerId?: string;
-  customerName?: string;
-  invoiceDate?: string;
-  dueDate?: string;
-  items?: Array<{
-    name?: string;
-    description?: string;
-    quantity?: number;
-    unitPrice?: number;
-    productName?: string; // Added to match usage in component
-    unit?: string; // Added to match usage in component
-    totalPrice?: number; // Added to match usage in component
-  }>;
-  totalAmount?: number;
-  status?: 'pending' | 'paid' | 'overdue';
-  notes?: string;
+  quotationId: string;
+  customerId: string;
+  customerName: string;
+  items: QuotationItem[];
+  totalAmount: number;
+  createdAt: number;
+  createdBy: string;
   pdfUrl?: string;
-  createdAt?: string;
-  updatedAt?: string;
 }
 
-// Authentication Functions
-export const registerUser = async (email: string, password: string, name: string, phone: string): Promise<UserData> => {
-    try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
+// Attendance type
+export interface AttendanceRecord {
+  id?: string;
+  userId: string;
+  userName: string;
+  date: string;
+  timeIn: string;
+  timeOut?: string;
+  status: 'present' | 'absent' | 'late' | 'half-day';
+}
 
-        // Update user profile
-        await updateProfile(user, {
-            displayName: name
-        });
-
-        // Create user document in Firestore
-        const userDocRef = doc(db, 'users', user.uid);
-        await setDoc(userDocRef, {
-            uid: user.uid,
-            email: user.email,
-            displayName: name,
-            phoneNumber: phone,
-            role: 'employee', // Default role
-            createdAt: new Date().toISOString()
-        });
-
-        return {
-            uid: user.uid,
-            email: user.email || '',
-            displayName: name,
-            phoneNumber: phone,
-            role: 'employee',
-            createdAt: new Date().toISOString()
-        };
-    } catch (error: any) {
-        console.error("Error registering user:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-export const loginUser = async (email: string, password: string): Promise<UserData> => {
-    try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-
-        // Fetch user data from Firestore
-        const userDocRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
-
-        if (userDoc.exists()) {
-            const userData = userDoc.data() as UserData;
-            return userData;
-        } else {
-            throw new Error("User data not found in Firestore");
-        }
-    } catch (error: any) {
-        console.error("Error logging in user:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-export const logoutUser = async (): Promise<void> => {
-    try {
-        await signOut(auth);
-    } catch (error: any) {
-        console.error("Error logging out user:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-export const onAuthStateChange = (callback: (user: FirebaseUser | null) => void) => {
-    return onAuthStateChanged(auth, (user) => {
-        if (user) {
-            const firebaseUser: FirebaseUser = {
-                uid: user.uid,
-                email: user.email,
-                displayName: user.displayName,
-                emailVerified: user.emailVerified
-            };
-            callback(firebaseUser);
-        } else {
-            callback(null);
-        }
-    });
-};
-
-// Firestore Functions
-export const getCurrentUserData = async (): Promise<UserData> => {
-    const user = auth.currentUser;
-    if (!user) {
-        throw new Error("No user is currently logged in.");
-    }
-
-    const userDocRef = doc(db, 'users', user.uid);
-    const userDoc = await getDoc(userDocRef);
-
-    if (userDoc.exists()) {
-        return userDoc.data() as UserData;
-    } else {
-        throw new Error("User data not found in Firestore");
-    }
-};
-
-// User Management Functions
-export const getAllUsers = async (): Promise<UserData[]> => {
-    try {
-        const usersCollection = collection(db, "users");
-        const usersSnapshot = await getDocs(usersCollection);
-        return usersSnapshot.docs.map(doc => doc.data() as UserData);
-    } catch (error: any) {
-        console.error("Error fetching users:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-// Alias for getAllUsers to match the import in UserManagement.tsx
-export const getUsers = getAllUsers;
-
-export const updateUserRole = async (userId: string, newRole: UserRole): Promise<void> => {
-    try {
-        const userDocRef = doc(db, "users", userId);
-        await updateDoc(userDocRef, { role: newRole });
-    } catch (error: any) {
-        console.error("Error updating user role:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-// Customer Functions
-export const getCustomers = async (): Promise<Customer[]> => {
-    try {
-        const customersCollection = collection(db, "customers");
-        const customersSnapshot = await getDocs(customersCollection);
-        return customersSnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        })) as Customer[];
-    } catch (error: any) {
-        console.error("Error fetching customers:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-export const addCustomer = async (customerData: Omit<Customer, 'id'>): Promise<Customer> => {
-    try {
-        const customersCollection = collection(db, "customers");
-        const docRef = await addDoc(customersCollection, {
-            ...customerData,
-            createdAt: new Date().toISOString()
-        });
-        return {
-            id: docRef.id,
-            ...customerData
-        };
-    } catch (error: any) {
-        console.error("Error adding customer:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-export const updateCustomer = async (customerId: string, updates: Partial<Customer>): Promise<void> => {
-    try {
-        const customerDocRef = doc(db, "customers", customerId);
-        await updateDoc(customerDocRef, {
-            ...updates,
-            updatedAt: new Date().toISOString()
-        });
-    } catch (error: any) {
-        console.error("Error updating customer:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-export const deleteCustomer = async (customerId: string): Promise<void> => {
-    try {
-        const customerDocRef = doc(db, "customers", customerId);
-        await deleteDoc(customerDocRef);
-    } catch (error: any) {
-        console.error("Error deleting customer:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-// Product Functions
-export const getProducts = async (): Promise<Product[]> => {
-    try {
-        const productsCollection = collection(db, "products");
-        const productsSnapshot = await getDocs(productsCollection);
-        return productsSnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        })) as Product[];
-    } catch (error: any) {
-        console.error("Error fetching products:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-export const addProduct = async (productData: Omit<Product, 'id'>): Promise<Product> => {
-    try {
-        const productsCollection = collection(db, "products");
-        const docRef = await addDoc(productsCollection, {
-            ...productData,
-            createdAt: new Date().toISOString()
-        });
-        return {
-            id: docRef.id,
-            ...productData
-        };
-    } catch (error: any) {
-        console.error("Error adding product:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-export const updateProduct = async (productId: string, updates: Partial<Product>): Promise<void> => {
-    try {
-        const productDocRef = doc(db, "products", productId);
-        await updateDoc(productDocRef, {
-            ...updates,
-            updatedAt: new Date().toISOString()
-        });
-    } catch (error: any) {
-        console.error("Error updating product:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-export const deleteProduct = async (productId: string): Promise<void> => {
-    try {
-        const productDocRef = doc(db, "products", productId);
-        await deleteDoc(productDocRef);
-    } catch (error: any) {
-        console.error("Error deleting product:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-// Attendance Functions
-export const markAttendance = async (userId: string, userName: string, date: string, timeIn: string, status: AttendanceRecord['status']): Promise<void> => {
-    try {
-        const attendanceCollection = collection(db, "attendance");
-        await addDoc(attendanceCollection, {
-            userId,
-            userName,
-            date,
-            timeIn,
-            status,
-            createdAt: new Date().toISOString()
-        });
-    } catch (error: any) {
-        console.error("Error marking attendance:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-export const addAttendanceRecord = async (userId: string, date: string, timeIn: string, timeOut: string): Promise<void> => {
-    try {
-        const attendanceCollection = collection(db, "attendance");
-        await addDoc(attendanceCollection, {
-            userId,
-            date,
-            timeIn,
-            timeOut
-        });
-    } catch (error: any) {
-        console.error("Error adding attendance record:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-export const getAllUsersAttendance = async (): Promise<AttendanceRecord[]> => {
-    try {
-        const attendanceCollection = collection(db, "attendance");
-        const attendanceSnapshot = await getDocs(attendanceCollection);
-        return attendanceSnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        })) as AttendanceRecord[];
-    } catch (error: any) {
-        console.error("Error fetching attendance records:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-export const getUserAttendance = async (userId?: string): Promise<AttendanceRecord[]> => {
-    try {
-        const currentUser = auth.currentUser;
-        if (!userId && !currentUser) {
-            throw new Error("No user specified or logged in");
-        }
-
-        const targetUserId = userId || currentUser!.uid;
-        const attendanceCollection = collection(db, "attendance");
-        const q = query(attendanceCollection, where("userId", "==", targetUserId));
-        const attendanceSnapshot = await getDocs(q);
-
-        return attendanceSnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        })) as AttendanceRecord[];
-    } catch (error: any) {
-        console.error("Error fetching user attendance:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-export const getAttendanceRecords = async (): Promise<any[]> => {
-    try {
-        const attendanceCollection = collection(db, "attendance");
-        const attendanceSnapshot = await getDocs(attendanceCollection);
-        return attendanceSnapshot.docs.map(doc => doc.data());
-    } catch (error: any) {
-        console.error("Error fetching attendance records:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-// Quotation Functions
-export const getQuotations = async (): Promise<Quotation[]> => {
-    try {
-        const quotationsCollection = collection(db, "quotations");
-        const quotationSnapshot = await getDocs(quotationsCollection);
-        return quotationSnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        })) as Quotation[];
-    } catch (error: any) {
-        console.error("Error fetching quotations:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-export const createQuotation = async (quotationData: Omit<Quotation, 'id' | 'createdAt'>): Promise<Quotation> => {
-    try {
-        const quotationsCollection = collection(db, "quotations");
-        const docRef = await addDoc(quotationsCollection, {
-            ...quotationData,
-            createdAt: new Date().toISOString()
-        });
-        const docSnapshot = await getDoc(docRef);
-        return {
-            id: docSnapshot.id,
-            ...docSnapshot.data()
-        } as Quotation;
-    } catch (error: any) {
-        console.error("Error creating quotation:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-export const updateQuotation = async (quotationId: string, updates: Partial<Quotation>): Promise<void> => {
-    try {
-        const quotationDocRef = doc(db, "quotations", quotationId);
-        await updateDoc(quotationDocRef, updates);
-    } catch (error: any) {
-        console.error("Error updating quotation:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-export const deleteQuotation = async (quotationId: string): Promise<void> => {
-    try {
-        const quotationDocRef = doc(db, "quotations", quotationId);
-        await deleteDoc(quotationDocRef);
-    } catch (error: any) {
-        console.error("Error deleting quotation:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-// Storage Functions
-export const uploadFile = async (file: File, path: string): Promise<string> => {
-    try {
-        const storageRef = ref(storage, path);
-        await uploadBytes(storageRef, file);
-        const downloadURL = await getDownloadURL(storageRef);
-        return downloadURL;
-    } catch (error: any) {
-        console.error("Error uploading file:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-// Initial Master Admin Account
-export const initializeMasterAdmin = async (email: string, password: string, name: string, phone: string): Promise<UserData | null> => {
-    try {
-        // Check if a master admin already exists
-        const usersCollection = collection(db, 'users');
-        const q = query(usersCollection, where("role", "==", "master_admin"));
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-            console.log("Master admin account already exists.");
-            return null;
-        }
-
-        // Create the new user
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-
-        // Update user profile
-        await updateProfile(user, {
-            displayName: name
-        });
-
-        // Set master admin role in Firestore
-        const userDocRef = doc(db, 'users', user.uid);
-        await setDoc(userDocRef, {
-            uid: user.uid,
-            email: user.email,
-            displayName: name,
-            phoneNumber: phone,
-            role: 'master_admin',
-            createdAt: new Date().toISOString()
-        });
-
-        return {
-            uid: user.uid,
-            email: user.email || '',
-            displayName: name,
-            phoneNumber: phone,
-            role: 'master_admin',
-            createdAt: new Date().toISOString()
-        };
-    } catch (error: any) {
-        console.error("Error initializing master admin:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-// Invoice Functions
-export const getInvoices = async (): Promise<Invoice[]> => {
-    try {
-        const invoicesCollection = collection(db, "invoices");
-        const invoiceSnapshot = await getDocs(invoicesCollection);
-        return invoiceSnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        })) as Invoice[];
-    } catch (error: any) {
-        console.error("Error fetching invoices:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-// Create a new invoice
-export const createInvoice = async (invoiceData: Partial<Invoice>): Promise<Invoice> => {
+// Auth functions
+export const registerUser = async (
+  email: string, 
+  password: string, 
+  displayName: string, 
+  phoneNumber: string
+) => {
   try {
-    // Ensure status is one of the allowed values
-    if (typeof invoiceData.status === 'string' && !['pending', 'paid', 'overdue'].includes(invoiceData.status)) {
-      invoiceData.status = 'pending';
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+    
+    await updateProfile(user, { displayName });
+    
+    // Save additional user data to the database
+    const userData: UserData = {
+      uid: user.uid,
+      email: user.email || email,
+      displayName,
+      phoneNumber,
+      role: 'employee', // Default role
+      createdAt: Date.now(),
+    };
+    
+    await set(ref(database, `users/${user.uid}`), userData);
+    
+    return userData;
+  } catch (error) {
+    console.error("Error registering user:", error);
+    throw error;
+  }
+};
+
+// Master admin initialization function
+export const initializeMasterAdmin = async (
+  email: string, 
+  password: string, 
+  displayName: string, 
+  phoneNumber: string
+) => {
+  try {
+    // Check if master admin already exists
+    const masterAdminQuery = query(
+      ref(database, 'users'),
+      orderByChild('role'),
+      equalTo('master_admin')
+    );
+    
+    const snapshot = await get(masterAdminQuery);
+    
+    if (snapshot.exists()) {
+      console.log("Master admin already exists");
+      return null;
+    }
+
+    // If no master admin exists, create one
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+    
+    await updateProfile(user, { displayName });
+    
+    const userData: UserData = {
+      uid: user.uid,
+      email: user.email || email,
+      displayName,
+      phoneNumber,
+      role: 'master_admin',
+      createdAt: Date.now(),
+    };
+    
+    await set(ref(database, `users/${user.uid}`), userData);
+    
+    return userData;
+  } catch (error) {
+    console.error("Error initializing master admin:", error);
+    throw error;
+  }
+};
+
+// Login function
+export const loginUser = async (email: string, password: string) => {
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+    
+    // Get user data from database
+    const userDataSnapshot = await get(ref(database, `users/${user.uid}`));
+    const userData = userDataSnapshot.val() as UserData;
+    
+    return userData;
+  } catch (error) {
+    console.error("Error logging in:", error);
+    throw error;
+  }
+};
+
+// Logout function
+export const logoutUser = async () => {
+  try {
+    await signOut(auth);
+    return true;
+  } catch (error) {
+    console.error("Error logging out:", error);
+    throw error;
+  }
+};
+
+// Get current user data
+export const getCurrentUserData = async () => {
+  const user = auth.currentUser;
+  
+  if (!user) return null;
+  
+  try {
+    const userDataSnapshot = await get(ref(database, `users/${user.uid}`));
+    return userDataSnapshot.val() as UserData;
+  } catch (error) {
+    console.error("Error getting user data:", error);
+    throw error;
+  }
+};
+
+// Update user role
+export const updateUserRole = async (userId: string, newRole: UserRole) => {
+  try {
+    // Check if current user is master admin
+    const currentUser = await getCurrentUserData();
+    
+    if (!currentUser || currentUser.role !== 'master_admin') {
+      throw new Error("Only master admin can update user roles");
     }
     
-    const invoicesCollection = collection(db, "invoices");
+    await update(ref(database, `users/${userId}`), { role: newRole });
+    return true;
+  } catch (error) {
+    console.error("Error updating user role:", error);
+    throw error;
+  }
+};
+
+// Database functions for customers
+export const addCustomer = async (customer: Omit<Customer, 'id' | 'createdAt' | 'createdBy'>) => {
+  try {
+    const user = auth.currentUser;
+    if (!user) throw new Error("User not authenticated");
     
-    const docRef = await addDoc(invoicesCollection, {
-      ...invoiceData,
-      createdAt: new Date().toISOString(),
+    const customerRef = ref(database, 'customers');
+    const newCustomerRef = push(customerRef);
+    
+    const newCustomer: Customer = {
+      ...customer,
+      createdAt: Date.now(),
+      createdBy: user.uid,
+    };
+    
+    await set(newCustomerRef, newCustomer);
+    return { id: newCustomerRef.key, ...newCustomer };
+  } catch (error) {
+    console.error("Error adding customer:", error);
+    throw error;
+  }
+};
+
+export const updateCustomer = async (customerId: string, updates: Partial<Customer>) => {
+  try {
+    await update(ref(database, `customers/${customerId}`), updates);
+    return true;
+  } catch (error) {
+    console.error("Error updating customer:", error);
+    throw error;
+  }
+};
+
+export const deleteCustomer = async (customerId: string) => {
+  try {
+    // Check if user has permission
+    const currentUser = await getCurrentUserData();
+    
+    if (!currentUser || !['master_admin', 'admin'].includes(currentUser.role)) {
+      throw new Error("You don't have permission to delete customers");
+    }
+    
+    await remove(ref(database, `customers/${customerId}`));
+    return true;
+  } catch (error) {
+    console.error("Error deleting customer:", error);
+    throw error;
+  }
+};
+
+export const getCustomers = async () => {
+  try {
+    const customersRef = ref(database, 'customers');
+    const snapshot = await get(customersRef);
+    
+    if (!snapshot.exists()) return [];
+    
+    const customers: Customer[] = [];
+    snapshot.forEach((childSnapshot) => {
+      customers.push({
+        id: childSnapshot.key || '',
+        ...childSnapshot.val()
+      });
     });
     
-    // Get the complete invoice data
-    const invoiceDoc = await getDoc(docRef);
-    const invoice = { id: invoiceDoc.id, ...invoiceDoc.data() } as Invoice;
+    return customers;
+  } catch (error) {
+    console.error("Error getting customers:", error);
+    throw error;
+  }
+};
+
+export const getCustomerById = async (customerId: string) => {
+  try {
+    const customerRef = ref(database, `customers/${customerId}`);
+    const snapshot = await get(customerRef);
     
-    return invoice;
+    if (!snapshot.exists()) return null;
+    
+    return {
+      id: snapshot.key,
+      ...snapshot.val()
+    } as Customer;
+  } catch (error) {
+    console.error("Error getting customer:", error);
+    throw error;
+  }
+};
+
+// Database functions for products
+export const addProduct = async (product: Omit<Product, 'id' | 'createdAt' | 'createdBy'>) => {
+  try {
+    // Check if user has permission
+    const currentUser = await getCurrentUserData();
+    
+    if (!currentUser || !['master_admin', 'admin'].includes(currentUser.role)) {
+      throw new Error("You don't have permission to add products");
+    }
+    
+    const user = auth.currentUser;
+    if (!user) throw new Error("User not authenticated");
+    
+    const productRef = ref(database, 'products');
+    const newProductRef = push(productRef);
+    
+    const newProduct: Product = {
+      ...product,
+      createdAt: Date.now(),
+      createdBy: user.uid,
+    };
+    
+    await set(newProductRef, newProduct);
+    return { id: newProductRef.key, ...newProduct };
+  } catch (error) {
+    console.error("Error adding product:", error);
+    throw error;
+  }
+};
+
+export const updateProduct = async (productId: string, updates: Partial<Product>) => {
+  try {
+    await update(ref(database, `products/${productId}`), updates);
+    return true;
+  } catch (error) {
+    console.error("Error updating product:", error);
+    throw error;
+  }
+};
+
+export const deleteProduct = async (productId: string) => {
+  try {
+    // Check if user has permission
+    const currentUser = await getCurrentUserData();
+    
+    if (!currentUser || !['master_admin', 'admin'].includes(currentUser.role)) {
+      throw new Error("You don't have permission to delete products");
+    }
+    
+    await remove(ref(database, `products/${productId}`));
+    return true;
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    throw error;
+  }
+};
+
+export const getProducts = async () => {
+  try {
+    const productsRef = ref(database, 'products');
+    const snapshot = await get(productsRef);
+    
+    if (!snapshot.exists()) return [];
+    
+    const products: Product[] = [];
+    snapshot.forEach((childSnapshot) => {
+      products.push({
+        id: childSnapshot.key || '',
+        ...childSnapshot.val()
+      });
+    });
+    
+    return products;
+  } catch (error) {
+    console.error("Error getting products:", error);
+    throw error;
+  }
+};
+
+export const getProductById = async (productId: string) => {
+  try {
+    const productRef = ref(database, `products/${productId}`);
+    const snapshot = await get(productRef);
+    
+    if (!snapshot.exists()) return null;
+    
+    return {
+      id: snapshot.key,
+      ...snapshot.val()
+    } as Product;
+  } catch (error) {
+    console.error("Error getting product:", error);
+    throw error;
+  }
+};
+
+// Database functions for quotations with fixed quantity handling
+export const createQuotation = async (quotation: Omit<Quotation, 'id' | 'createdAt' | 'createdBy'>) => {
+  try {
+    const user = auth.currentUser;
+    if (!user) throw new Error("User not authenticated");
+    
+    // Ensure each item has the correct quantity
+    const quotationWithValidItems = {
+      ...quotation,
+      items: await Promise.all(quotation.items.map(async (item) => {
+        // Make sure we convert quantity to a proper number
+        const quantity = Number(item.quantity);
+        if (isNaN(quantity)) {
+          throw new Error(`Invalid quantity for product ${item.productName}`);
+        }
+        
+        // Calculate total price based on quantity and unit price
+        const totalPrice = quantity * item.unitPrice;
+        
+        return {
+          ...item,
+          quantity,
+          totalPrice
+        };
+      }))
+    };
+    
+    // Calculate the total amount based on all item totals
+    const totalAmount = quotationWithValidItems.items.reduce(
+      (sum, item) => sum + item.totalPrice, 
+      0
+    );
+    
+    const quotationsRef = ref(database, 'quotations');
+    const newQuotationRef = push(quotationsRef);
+    
+    const newQuotation: Quotation = {
+      ...quotationWithValidItems,
+      totalAmount,
+      createdAt: Date.now(),
+      createdBy: user.uid,
+    };
+    
+    await set(newQuotationRef, newQuotation);
+    return { id: newQuotationRef.key, ...newQuotation };
+  } catch (error) {
+    console.error("Error creating quotation:", error);
+    throw error;
+  }
+};
+
+export const updateQuotation = async (quotationId: string, updates: Partial<Quotation>) => {
+  try {
+    // If we're updating items, ensure quantities are valid
+    if (updates.items) {
+      updates.items = await Promise.all(updates.items.map(async (item) => {
+        // Make sure we convert quantity to a proper number
+        const quantity = Number(item.quantity);
+        if (isNaN(quantity)) {
+          throw new Error(`Invalid quantity for product ${item.productName}`);
+        }
+        
+        // Calculate total price based on quantity and unit price
+        const totalPrice = quantity * item.unitPrice;
+        
+        return {
+          ...item,
+          quantity,
+          totalPrice
+        };
+      }));
+      
+      // Recalculate total amount if items changed
+      updates.totalAmount = updates.items.reduce(
+        (sum, item) => sum + item.totalPrice, 
+        0
+      );
+    }
+    
+    await update(ref(database, `quotations/${quotationId}`), updates);
+    return true;
+  } catch (error) {
+    console.error("Error updating quotation:", error);
+    throw error;
+  }
+};
+
+export const deleteQuotation = async (quotationId: string) => {
+  try {
+    // Check if user has permission
+    const currentUser = await getCurrentUserData();
+    
+    if (!currentUser || !['master_admin', 'admin'].includes(currentUser.role)) {
+      throw new Error("You don't have permission to delete quotations");
+    }
+    
+    await remove(ref(database, `quotations/${quotationId}`));
+    return true;
+  } catch (error) {
+    console.error("Error deleting quotation:", error);
+    throw error;
+  }
+};
+
+export const getQuotations = async () => {
+  try {
+    const quotationsRef = ref(database, 'quotations');
+    const snapshot = await get(quotationsRef);
+    
+    if (!snapshot.exists()) return [];
+    
+    const quotations: Quotation[] = [];
+    snapshot.forEach((childSnapshot) => {
+      quotations.push({
+        id: childSnapshot.key || '',
+        ...childSnapshot.val()
+      });
+    });
+    
+    return quotations;
+  } catch (error) {
+    console.error("Error getting quotations:", error);
+    throw error;
+  }
+};
+
+export const getQuotationById = async (quotationId: string) => {
+  try {
+    const quotationRef = ref(database, `quotations/${quotationId}`);
+    const snapshot = await get(quotationRef);
+    
+    if (!snapshot.exists()) return null;
+    
+    const quotation = {
+      id: snapshot.key,
+      ...snapshot.val()
+    } as Quotation;
+    
+    // Validate the items to ensure quantities are correct
+    const validatedItems = quotation.items.map(item => {
+      const quantity = Number(item.quantity);
+      const totalPrice = quantity * item.unitPrice;
+      
+      return {
+        ...item,
+        quantity: isNaN(quantity) ? 0 : quantity,
+        totalPrice: isNaN(totalPrice) ? 0 : totalPrice
+      };
+    });
+    
+    return {
+      ...quotation,
+      items: validatedItems,
+      totalAmount: validatedItems.reduce((sum, item) => sum + item.totalPrice, 0)
+    };
+  } catch (error) {
+    console.error("Error getting quotation:", error);
+    throw error;
+  }
+};
+
+// Database functions for invoices
+export const createInvoice = async (invoice: Omit<Invoice, 'id' | 'createdAt' | 'createdBy'>) => {
+  try {
+    const user = auth.currentUser;
+    if (!user) throw new Error("User not authenticated");
+    
+    const invoicesRef = ref(database, 'invoices');
+    const newInvoiceRef = push(invoicesRef);
+    
+    const newInvoice: Invoice = {
+      ...invoice,
+      createdAt: Date.now(),
+      createdBy: user.uid,
+    };
+    
+    await set(newInvoiceRef, newInvoice);
+    return { id: newInvoiceRef.key, ...newInvoice };
   } catch (error) {
     console.error("Error creating invoice:", error);
-    throw new Error("Failed to create invoice.");
+    throw error;
   }
 };
 
-// Get a specific invoice by ID
-export const getInvoice = async (invoiceId: string): Promise<Invoice> => {
+export const updateInvoice = async (invoiceId: string, updates: Partial<Invoice>) => {
   try {
-    const invoiceRef = doc(db, "invoices", invoiceId);
-    const invoiceDoc = await getDoc(invoiceRef);
+    await update(ref(database, `invoices/${invoiceId}`), updates);
+    return true;
+  } catch (error) {
+    console.error("Error updating invoice:", error);
+    throw error;
+  }
+};
+
+export const deleteInvoice = async (invoiceId: string) => {
+  try {
+    // Check if user has permission
+    const currentUser = await getCurrentUserData();
     
-    if (!invoiceDoc.exists()) {
-      throw new Error("Invoice not found.");
+    if (!currentUser || !['master_admin', 'admin'].includes(currentUser.role)) {
+      throw new Error("You don't have permission to delete invoices");
     }
     
-    return { id: invoiceDoc.id, ...invoiceDoc.data() } as Invoice;
+    await remove(ref(database, `invoices/${invoiceId}`));
+    return true;
   } catch (error) {
-    console.error("Error fetching invoice:", error);
-    throw new Error("Failed to fetch invoice.");
+    console.error("Error deleting invoice:", error);
+    throw error;
   }
 };
 
-// Export the database and ref for real-time updates
-export { database, dbRef as ref, onValue };
+export const getInvoices = async () => {
+  try {
+    // Check if user has permission
+    const currentUser = await getCurrentUserData();
+    
+    if (!currentUser || !['master_admin', 'admin'].includes(currentUser.role)) {
+      throw new Error("You don't have permission to view invoices");
+    }
+    
+    const invoicesRef = ref(database, 'invoices');
+    const snapshot = await get(invoicesRef);
+    
+    if (!snapshot.exists()) return [];
+    
+    const invoices: Invoice[] = [];
+    snapshot.forEach((childSnapshot) => {
+      invoices.push({
+        id: childSnapshot.key || '',
+        ...childSnapshot.val()
+      });
+    });
+    
+    return invoices;
+  } catch (error) {
+    console.error("Error getting invoices:", error);
+    throw error;
+  }
+};
+
+export const getInvoiceById = async (invoiceId: string) => {
+  try {
+    // Check if user has permission
+    const currentUser = await getCurrentUserData();
+    
+    if (!currentUser || !['master_admin', 'admin'].includes(currentUser.role)) {
+      throw new Error("You don't have permission to view this invoice");
+    }
+    
+    const invoiceRef = ref(database, `invoices/${invoiceId}`);
+    const snapshot = await get(invoiceRef);
+    
+    if (!snapshot.exists()) return null;
+    
+    return {
+      id: snapshot.key,
+      ...snapshot.val()
+    } as Invoice;
+  } catch (error) {
+    console.error("Error getting invoice:", error);
+    throw error;
+  }
+};
+
+// Attendance functions
+export const markAttendance = async () => {
+  try {
+    const user = auth.currentUser;
+    if (!user) throw new Error("User not authenticated");
+    
+    const today = new Date();
+    const dateStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+    const timeStr = today.toTimeString().split(' ')[0]; // HH:MM:SS
+    
+    // Check if already marked attendance today
+    const userAttendanceQuery = query(
+      ref(database, 'attendance'),
+      orderByChild('userId'),
+      equalTo(user.uid)
+    );
+    
+    const snapshot = await get(userAttendanceQuery);
+    let found = false;
+    
+    if (snapshot.exists()) {
+      snapshot.forEach((childSnapshot) => {
+        const record = childSnapshot.val() as AttendanceRecord;
+        if (record.date === dateStr) {
+          found = true;
+          
+          // Update timeOut if already marked in
+          if (!record.timeOut) {
+            update(childSnapshot.ref, {
+              timeOut: timeStr,
+              status: 'present'
+            });
+          }
+        }
+      });
+    }
+    
+    if (!found) {
+      // Mark new attendance
+      const userData = await getCurrentUserData();
+      if (!userData) throw new Error("User data not found");
+      
+      const attendanceRef = ref(database, 'attendance');
+      const newAttendanceRef = push(attendanceRef);
+      
+      const attendanceRecord: AttendanceRecord = {
+        userId: user.uid,
+        userName: userData.displayName,
+        date: dateStr,
+        timeIn: timeStr,
+        status: 'present'
+      };
+      
+      await set(newAttendanceRef, attendanceRecord);
+      return { id: newAttendanceRef.key, ...attendanceRecord };
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error marking attendance:", error);
+    throw error;
+  }
+};
+
+export const getUserAttendance = async (userId?: string) => {
+  try {
+    const user = auth.currentUser;
+    if (!user) throw new Error("User not authenticated");
+    
+    const targetUserId = userId || user.uid;
+    
+    // If requesting other user's attendance, check permission
+    if (targetUserId !== user.uid) {
+      const currentUser = await getCurrentUserData();
+      
+      if (!currentUser || !['master_admin', 'admin'].includes(currentUser.role)) {
+        throw new Error("You don't have permission to view other users' attendance");
+      }
+    }
+    
+    const userAttendanceQuery = query(
+      ref(database, 'attendance'),
+      orderByChild('userId'),
+      equalTo(targetUserId)
+    );
+    
+    const snapshot = await get(userAttendanceQuery);
+    
+    if (!snapshot.exists()) return [];
+    
+    const attendanceRecords: AttendanceRecord[] = [];
+    snapshot.forEach((childSnapshot) => {
+      attendanceRecords.push({
+        id: childSnapshot.key || '',
+        ...childSnapshot.val()
+      });
+    });
+    
+    return attendanceRecords;
+  } catch (error) {
+    console.error("Error getting attendance:", error);
+    throw error;
+  }
+};
+
+export const getAllUsersAttendance = async () => {
+  try {
+    // Check if user has permission
+    const currentUser = await getCurrentUserData();
+    
+    if (!currentUser || !['master_admin'].includes(currentUser.role)) {
+      throw new Error("You don't have permission to view all attendance records");
+    }
+    
+    const attendanceRef = ref(database, 'attendance');
+    const snapshot = await get(attendanceRef);
+    
+    if (!snapshot.exists()) return [];
+    
+    const attendanceRecords: AttendanceRecord[] = [];
+    snapshot.forEach((childSnapshot) => {
+      attendanceRecords.push({
+        id: childSnapshot.key || '',
+        ...childSnapshot.val()
+      });
+    });
+    
+    return attendanceRecords;
+  } catch (error) {
+    console.error("Error getting all attendance records:", error);
+    throw error;
+  }
+};
+
+// User management functions
+export const getUsers = async () => {
+  try {
+    // Check if user has permission
+    const currentUser = await getCurrentUserData();
+    
+    if (!currentUser || !['master_admin'].includes(currentUser.role)) {
+      throw new Error("Only master admin can view all users");
+    }
+    
+    const usersRef = ref(database, 'users');
+    const snapshot = await get(usersRef);
+    
+    if (!snapshot.exists()) return [];
+    
+    const users: UserData[] = [];
+    snapshot.forEach((childSnapshot) => {
+      users.push(childSnapshot.val());
+    });
+    
+    return users;
+  } catch (error) {
+    console.error("Error getting users:", error);
+    throw error;
+  }
+};
+
+// Setup auth listener
+export const onAuthStateChange = (callback: (user: FirebaseUser | null) => void) => {
+  return onAuthStateChanged(auth, callback);
+};
+
+// Export Firebase instances - fixing the isolatedModules type export issue
+export { auth, database, ref, onValue };
+export type { FirebaseUser };

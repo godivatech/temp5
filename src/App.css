@@ -96,21 +96,12 @@
   to { transform: translateY(0); opacity: 1; }
 }
 
-@keyframes scaleIn {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
 .fade-in {
   animation: fadeIn 0.5s ease-out forwards;
 }
 
 .slide-in {
   animation: slideIn 0.3s ease-out forwards;
-}
-
-.scale-in {
-  animation: scaleIn 0.3s ease-out forwards;
 }
 
 .page-transition {
@@ -182,89 +173,4 @@
 
 .animation-delay-600 {
   animation-delay: 0.6s;
-}
-
-/* Responsive Utilities */
-@media (max-width: 640px) {
-  .responsive-card {
-    padding: 1rem;
-  }
-  
-  .responsive-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (min-width: 641px) and (max-width: 1024px) {
-  .responsive-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* State Indicators */
-.status-badge {
-  @apply px-2 py-1 rounded-full text-xs font-medium;
-}
-
-.status-pending {
-  @apply bg-yellow-100 text-yellow-800;
-}
-
-.status-approved {
-  @apply bg-green-100 text-green-800;
-}
-
-.status-rejected {
-  @apply bg-red-100 text-red-800;
-}
-
-.status-inactive {
-  @apply bg-gray-100 text-gray-800;
-}
-
-/* Enhanced form styles */
-.form-group {
-  @apply space-y-2;
-}
-
-.form-label {
-  @apply block text-sm font-medium text-gray-700;
-}
-
-.form-input {
-  @apply block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500;
-}
-
-/* Dashboard Layout */
-@media (max-width: 1024px) {
-  .dashboard-main {
-    margin-left: 0;
-  }
-  
-  .dashboard-sidebar {
-    position: fixed;
-    z-index: 50;
-    transform: translateX(-100%);
-  }
-  
-  .dashboard-sidebar.expanded {
-    transform: translateX(0);
-  }
-}
-
-/* Dashboard Content */
-.dashboard-content {
-  width: 100%;
-  max-width: 100%;
-  transition: all 0.3s ease;
-}
-
-@media (min-width: 1024px) {
-  .dashboard-content.sidebar-collapsed {
-    margin-left: 70px;
-  }
-  
-  .dashboard-content.sidebar-expanded {
-    margin-left: 240px;
-  }
 }
