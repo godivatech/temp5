@@ -1,3 +1,4 @@
+
 import { initializeApp } from "firebase/app";
 import { getAuth, 
     signInWithEmailAndPassword, 
@@ -15,9 +16,11 @@ import { getFirestore,
     updateDoc, 
     deleteDoc,
     query,
-    where 
+    where,
+    setDoc 
 } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getDatabase, ref as dbRef, onValue } from "firebase/database";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBo8D4pTG6oNGg4qy7V4AaC73qfAB0HRcc",
@@ -34,6 +37,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
+const database = getDatabase(app);
 
 // Firebase Authentication Types
 export type FirebaseUser = {
@@ -52,6 +56,41 @@ export interface UserData {
     displayName: string;
     phoneNumber: string;
     role: UserRole;
+    createdAt?: string;
+}
+
+// Customer Interface
+export interface Customer {
+    id?: string;
+    name: string;
+    email: string;
+    address: string;
+    location: string;
+    scope?: string;
+}
+
+// Product Interface
+export interface Product {
+    id?: string;
+    name: string;
+    type: string;
+    voltage: string;
+    rating: string;
+    make: string;
+    quantity: number;
+    unit: string;
+    price: number;
+}
+
+// Attendance Record Interface
+export interface AttendanceRecord {
+    id?: string;
+    userId: string;
+    userName: string;
+    date: string;
+    timeIn: string;
+    timeOut?: string;
+    status: 'present' | 'absent' | 'late' | 'half-day';
 }
 
 // Quotation Interface
@@ -68,7 +107,7 @@ export interface Quotation {
         unitPrice?: number;
     }>;
     totalAmount?: number;
-    status?: 'pending' | 'approved' | 'rejected';
+    status?: 'pending' | 'approved' | 'rejected' | 'draft';
     notes?: string;
     createdAt?: string;
     updatedAt?: string;
@@ -115,7 +154,8 @@ export const registerUser = async (email: string, password: string, name: string
             email: user.email,
             displayName: name,
             phoneNumber: phone,
-            role: 'employee' // Default role
+            role: 'employee', // Default role
+            createdAt: new Date().toISOString()
         });
 
         return {
@@ -123,7 +163,8 @@ export const registerUser = async (email: string, password: string, name: string
             email: user.email || '',
             displayName: name,
             phoneNumber: phone,
-            role: 'employee'
+            role: 'employee',
+            createdAt: new Date().toISOString()
         };
     } catch (error: any) {
         console.error("Error registering user:", error.message);
@@ -194,6 +235,221 @@ export const getCurrentUserData = async (): Promise<UserData> => {
     }
 };
 
+// User Management Functions
+export const getAllUsers = async (): Promise<UserData[]> => {
+    try {
+        const usersCollection = collection(db, "users");
+        const usersSnapshot = await getDocs(usersCollection);
+        return usersSnapshot.docs.map(doc => doc.data() as UserData);
+    } catch (error: any) {
+        console.error("Error fetching users:", error.message);
+        throw new Error(error.message);
+    }
+};
+
+// Alias for getAllUsers to match the import in UserManagement.tsx
+export const getUsers = getAllUsers;
+
+export const updateUserRole = async (userId: string, newRole: UserRole): Promise<void> => {
+    try {
+        const userDocRef = doc(db, "users", userId);
+        await updateDoc(userDocRef, { role: newRole });
+    } catch (error: any) {
+        console.error("Error updating user role:", error.message);
+        throw new Error(error.message);
+    }
+};
+
+// Customer Functions
+export const getCustomers = async (): Promise<Customer[]> => {
+    try {
+        const customersCollection = collection(db, "customers");
+        const customersSnapshot = await getDocs(customersCollection);
+        return customersSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        })) as Customer[];
+    } catch (error: any) {
+        console.error("Error fetching customers:", error.message);
+        throw new Error(error.message);
+    }
+};
+
+export const addCustomer = async (customerData: Omit<Customer, 'id'>): Promise<Customer> => {
+    try {
+        const customersCollection = collection(db, "customers");
+        const docRef = await addDoc(customersCollection, {
+            ...customerData,
+            createdAt: new Date().toISOString()
+        });
+        return {
+            id: docRef.id,
+            ...customerData
+        };
+    } catch (error: any) {
+        console.error("Error adding customer:", error.message);
+        throw new Error(error.message);
+    }
+};
+
+export const updateCustomer = async (customerId: string, updates: Partial<Customer>): Promise<void> => {
+    try {
+        const customerDocRef = doc(db, "customers", customerId);
+        await updateDoc(customerDocRef, {
+            ...updates,
+            updatedAt: new Date().toISOString()
+        });
+    } catch (error: any) {
+        console.error("Error updating customer:", error.message);
+        throw new Error(error.message);
+    }
+};
+
+export const deleteCustomer = async (customerId: string): Promise<void> => {
+    try {
+        const customerDocRef = doc(db, "customers", customerId);
+        await deleteDoc(customerDocRef);
+    } catch (error: any) {
+        console.error("Error deleting customer:", error.message);
+        throw new Error(error.message);
+    }
+};
+
+// Product Functions
+export const getProducts = async (): Promise<Product[]> => {
+    try {
+        const productsCollection = collection(db, "products");
+        const productsSnapshot = await getDocs(productsCollection);
+        return productsSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        })) as Product[];
+    } catch (error: any) {
+        console.error("Error fetching products:", error.message);
+        throw new Error(error.message);
+    }
+};
+
+export const addProduct = async (productData: Omit<Product, 'id'>): Promise<Product> => {
+    try {
+        const productsCollection = collection(db, "products");
+        const docRef = await addDoc(productsCollection, {
+            ...productData,
+            createdAt: new Date().toISOString()
+        });
+        return {
+            id: docRef.id,
+            ...productData
+        };
+    } catch (error: any) {
+        console.error("Error adding product:", error.message);
+        throw new Error(error.message);
+    }
+};
+
+export const updateProduct = async (productId: string, updates: Partial<Product>): Promise<void> => {
+    try {
+        const productDocRef = doc(db, "products", productId);
+        await updateDoc(productDocRef, {
+            ...updates,
+            updatedAt: new Date().toISOString()
+        });
+    } catch (error: any) {
+        console.error("Error updating product:", error.message);
+        throw new Error(error.message);
+    }
+};
+
+export const deleteProduct = async (productId: string): Promise<void> => {
+    try {
+        const productDocRef = doc(db, "products", productId);
+        await deleteDoc(productDocRef);
+    } catch (error: any) {
+        console.error("Error deleting product:", error.message);
+        throw new Error(error.message);
+    }
+};
+
+// Attendance Functions
+export const markAttendance = async (userId: string, userName: string, date: string, timeIn: string, status: AttendanceRecord['status']): Promise<void> => {
+    try {
+        const attendanceCollection = collection(db, "attendance");
+        await addDoc(attendanceCollection, {
+            userId,
+            userName,
+            date,
+            timeIn,
+            status,
+            createdAt: new Date().toISOString()
+        });
+    } catch (error: any) {
+        console.error("Error marking attendance:", error.message);
+        throw new Error(error.message);
+    }
+};
+
+export const addAttendanceRecord = async (userId: string, date: string, timeIn: string, timeOut: string): Promise<void> => {
+    try {
+        const attendanceCollection = collection(db, "attendance");
+        await addDoc(attendanceCollection, {
+            userId,
+            date,
+            timeIn,
+            timeOut
+        });
+    } catch (error: any) {
+        console.error("Error adding attendance record:", error.message);
+        throw new Error(error.message);
+    }
+};
+
+export const getAllUsersAttendance = async (): Promise<AttendanceRecord[]> => {
+    try {
+        const attendanceCollection = collection(db, "attendance");
+        const attendanceSnapshot = await getDocs(attendanceCollection);
+        return attendanceSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        })) as AttendanceRecord[];
+    } catch (error: any) {
+        console.error("Error fetching attendance records:", error.message);
+        throw new Error(error.message);
+    }
+};
+
+export const getUserAttendance = async (userId?: string): Promise<AttendanceRecord[]> => {
+    try {
+        const currentUser = auth.currentUser;
+        if (!userId && !currentUser) {
+            throw new Error("No user specified or logged in");
+        }
+
+        const targetUserId = userId || currentUser!.uid;
+        const attendanceCollection = collection(db, "attendance");
+        const q = query(attendanceCollection, where("userId", "==", targetUserId));
+        const attendanceSnapshot = await getDocs(q);
+
+        return attendanceSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        })) as AttendanceRecord[];
+    } catch (error: any) {
+        console.error("Error fetching user attendance:", error.message);
+        throw new Error(error.message);
+    }
+};
+
+export const getAttendanceRecords = async (): Promise<any[]> => {
+    try {
+        const attendanceCollection = collection(db, "attendance");
+        const attendanceSnapshot = await getDocs(attendanceCollection);
+        return attendanceSnapshot.docs.map(doc => doc.data());
+    } catch (error: any) {
+        console.error("Error fetching attendance records:", error.message);
+        throw new Error(error.message);
+    }
+};
+
 // Quotation Functions
 export const getQuotations = async (): Promise<Quotation[]> => {
     try {
@@ -244,55 +500,6 @@ export const deleteQuotation = async (quotationId: string): Promise<void> => {
     }
 };
 
-// User Management Functions
-export const getAllUsers = async (): Promise<UserData[]> => {
-    try {
-        const usersCollection = collection(db, "users");
-        const usersSnapshot = await getDocs(usersCollection);
-        return usersSnapshot.docs.map(doc => doc.data() as UserData);
-    } catch (error: any) {
-        console.error("Error fetching users:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-export const updateUserRole = async (userId: string, newRole: UserRole): Promise<void> => {
-    try {
-        const userDocRef = doc(db, "users", userId);
-        await updateDoc(userDocRef, { role: newRole });
-    } catch (error: any) {
-        console.error("Error updating user role:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-// Attendance Functions
-export const addAttendanceRecord = async (userId: string, date: string, timeIn: string, timeOut: string): Promise<void> => {
-    try {
-        const attendanceCollection = collection(db, "attendance");
-        await addDoc(attendanceCollection, {
-            userId,
-            date,
-            timeIn,
-            timeOut
-        });
-    } catch (error: any) {
-        console.error("Error adding attendance record:", error.message);
-        throw new Error(error.message);
-    }
-};
-
-export const getAttendanceRecords = async (): Promise<any[]> => {
-    try {
-        const attendanceCollection = collection(db, "attendance");
-        const attendanceSnapshot = await getDocs(attendanceCollection);
-        return attendanceSnapshot.docs.map(doc => doc.data());
-    } catch (error: any) {
-        console.error("Error fetching attendance records:", error.message);
-        throw new Error(error.message);
-    }
-};
-
 // Storage Functions
 export const uploadFile = async (file: File, path: string): Promise<string> => {
     try {
@@ -335,7 +542,8 @@ export const initializeMasterAdmin = async (email: string, password: string, nam
             email: user.email,
             displayName: name,
             phoneNumber: phone,
-            role: 'master_admin'
+            role: 'master_admin',
+            createdAt: new Date().toISOString()
         });
 
         return {
@@ -343,7 +551,8 @@ export const initializeMasterAdmin = async (email: string, password: string, nam
             email: user.email || '',
             displayName: name,
             phoneNumber: phone,
-            role: 'master_admin'
+            role: 'master_admin',
+            createdAt: new Date().toISOString()
         };
     } catch (error: any) {
         console.error("Error initializing master admin:", error.message);
@@ -369,7 +578,11 @@ export const getInvoices = async (): Promise<Invoice[]> => {
 // Create a new invoice
 export const createInvoice = async (invoiceData: Partial<Invoice>): Promise<Invoice> => {
   try {
-    const db = getFirestore();
+    // Ensure status is one of the allowed values
+    if (typeof invoiceData.status === 'string' && !['pending', 'paid', 'overdue'].includes(invoiceData.status)) {
+      invoiceData.status = 'pending';
+    }
+    
     const invoicesCollection = collection(db, "invoices");
     
     const docRef = await addDoc(invoicesCollection, {
@@ -386,12 +599,11 @@ export const createInvoice = async (invoiceData: Partial<Invoice>): Promise<Invo
     console.error("Error creating invoice:", error);
     throw new Error("Failed to create invoice.");
   }
-}
+};
 
 // Get a specific invoice by ID
 export const getInvoice = async (invoiceId: string): Promise<Invoice> => {
   try {
-    const db = getFirestore();
     const invoiceRef = doc(db, "invoices", invoiceId);
     const invoiceDoc = await getDoc(invoiceRef);
     
@@ -404,4 +616,7 @@ export const getInvoice = async (invoiceId: string): Promise<Invoice> => {
     console.error("Error fetching invoice:", error);
     throw new Error("Failed to fetch invoice.");
   }
-}
+};
+
+// Export the database and ref for real-time updates
+export { database, dbRef as ref, onValue };

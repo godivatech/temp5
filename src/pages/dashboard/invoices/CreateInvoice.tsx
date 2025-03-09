@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
-import { getQuotations, Quotation, createInvoice } from '@/lib/firebase';
+import { getQuotations, Quotation, createInvoice, Invoice } from '@/lib/firebase';
 
 const CreateInvoice = () => {
   const [quotations, setQuotations] = useState<Quotation[]>([]);
@@ -64,14 +64,14 @@ const CreateInvoice = () => {
     try {
       setIsLoading(true);
       
-      const invoiceData = {
+      const invoiceData: Partial<Invoice> = {
         ...formData,
         quotationId: selectedQuotation.id,
         customerName: selectedQuotation.customerName || 'Unknown Customer',
         customerId: selectedQuotation.customerId || '',
         items: selectedQuotation.items || [],
         totalAmount: selectedQuotation.totalAmount || 0,
-        status: 'pending',
+        status: 'pending' as const,
         createdAt: new Date().toISOString()
       };
       
