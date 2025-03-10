@@ -96,7 +96,7 @@ export interface Quotation {
   items?: QuotationItem[];
   totalAmount?: number;
   status?: 'draft' | 'sent' | 'accepted' | 'rejected';
-  createdAt?: string;
+  createdAt?: string | number;
   createdBy?: string;
   notes?: string;
 }
