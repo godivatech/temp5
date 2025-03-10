@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   ChevronLeft,
@@ -30,6 +30,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   const { logout, userData, hasRole } = useAuth();
   const isMobile = useIsMobile();
   const [isMobileExpanded, setIsMobileExpanded] = useState(false);
+
+  // Force expand on component mount to ensure items are visible initially
+  useEffect(() => {
+    setIsExpanded(true);
+  }, []);
 
   const toggleSidebar = () => {
     setIsExpanded(!isExpanded);
@@ -106,7 +111,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         to={item.path}
         className={({ isActive }) =>
           cn(
-            'sidebar-item group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+            'sidebar-item flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
             isActive 
               ? 'bg-indigo-100 text-indigo-900 font-semibold' 
               : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-900'
@@ -116,7 +121,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       >
         <item.icon
           className={cn(
-            'h-5 w-5 shrink-0 transition-transform group-hover:text-indigo-600',
+            'h-5 w-5 flex-shrink-0 transition-transform',
             pathname === item.path ? 'text-indigo-600' : 'text-gray-500'
           )}
         />
@@ -131,13 +136,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   const desktopSidebar = (
     <aside
       className={cn(
-        'h-screen bg-white border-r border-indigo-100 transition-all duration-300 shadow-sm flex flex-col overflow-hidden',
+        'h-screen bg-white border-r border-indigo-100 transition-all duration-300 shadow-sm flex flex-col overflow-hidden relative',
         isExpanded ? 'w-64' : 'w-20'
       )}
     >
       <div className="h-16 flex items-center px-4 border-b border-indigo-100 relative">
         <button
-          className="absolute top-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-600"
+          className="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-600"
           onClick={toggleSidebar}
           aria-label={isExpanded ? "Collapse sidebar" : "Expand sidebar"}
         >
@@ -169,7 +174,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
           {(hasRole(['master_admin']) || hasRole(['admin'])) && (
             <>
               <div className="my-2 border-t border-indigo-100" />
-              <p className="px-3 text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">
+              <p className={cn(
+                "px-3 text-xs font-medium text-gray-400 uppercase tracking-wider mb-1",
+                !isExpanded && "text-center"
+              )}>
                 {isExpanded ? 'Administration' : 'Admin'}
               </p>
               {renderNavItems(adminNavItems)}
@@ -181,15 +189,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       <div className="border-t border-indigo-100 bg-white p-3">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3 rounded-md py-1">
-            {isExpanded && (
+            {isExpanded ? (
               <>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 w-full">
                   <div className="h-8 w-8 rounded-full bg-gradient-to-r from-indigo-500 to-green-500 text-white flex items-center justify-center flex-shrink-0">
                     <span className="text-sm font-medium">
                       {userData?.displayName?.charAt(0)?.toUpperCase() || 'U'}
                     </span>
                   </div>
-                  <div className="flex flex-col min-w-0">
+                  <div className="flex flex-col min-w-0 flex-1">
                     <span className="text-sm font-medium truncate">{userData?.displayName || 'User'}</span>
                     <span className="text-xs text-gray-500 capitalize truncate">
                       {userData?.role?.replace('_', ' ') || 'Employee'}
@@ -197,6 +205,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
                   </div>
                 </div>
               </>
+            ) : (
+              <div className="w-full flex justify-center">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-r from-indigo-500 to-green-500 text-white flex items-center justify-center">
+                  <span className="text-sm font-medium">
+                    {userData?.displayName?.charAt(0)?.toUpperCase() || 'U'}
+                  </span>
+                </div>
+              </div>
             )}
           </div>
           <Button 
@@ -217,7 +233,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   const mobileSidebar = (
     <>
       <button
-        className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-md bg-white shadow-md text-indigo-600"
+        className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-md bg-white shadow-md text-indigo-600 border border-indigo-100"
         onClick={toggleMobileSidebar}
         aria-label="Toggle menu"
       >
@@ -272,13 +288,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
           <div className="border-t border-indigo-100 bg-white p-3">
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-3 rounded-md py-1">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 w-full">
                   <div className="h-8 w-8 rounded-full bg-gradient-to-r from-indigo-500 to-green-500 text-white flex items-center justify-center flex-shrink-0">
                     <span className="text-sm font-medium">
                       {userData?.displayName?.charAt(0)?.toUpperCase() || 'U'}
                     </span>
                   </div>
-                  <div className="flex flex-col min-w-0">
+                  <div className="flex flex-col min-w-0 flex-1">
                     <span className="text-sm font-medium truncate">{userData?.displayName || 'User'}</span>
                     <span className="text-xs text-gray-500 capitalize truncate">
                       {userData?.role?.replace('_', ' ') || 'Employee'}
