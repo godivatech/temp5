@@ -106,20 +106,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         to={item.path}
         className={({ isActive }) =>
           cn(
-            'sidebar-item group flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-indigo-50',
-            isActive ? 'bg-indigo-100 text-indigo-900' : 'text-gray-600 hover:text-indigo-900'
+            'sidebar-item group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+            isActive 
+              ? 'bg-indigo-100 text-indigo-900 font-semibold' 
+              : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-900'
           )
         }
         onClick={isMobile ? () => setIsMobileExpanded(false) : undefined}
       >
         <item.icon
           className={cn(
-            'h-5 w-5 shrink-0 transition-transform group-hover:scale-110',
+            'h-5 w-5 shrink-0 transition-transform group-hover:text-indigo-600',
             pathname === item.path ? 'text-indigo-600' : 'text-gray-500'
           )}
         />
         {(isExpanded || (isMobile && isMobileExpanded)) && (
-          <span>{item.title}</span>
+          <span className="whitespace-nowrap">{item.title}</span>
         )}
       </NavLink>
     ));
@@ -129,26 +131,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   const desktopSidebar = (
     <aside
       className={cn(
-        'h-screen bg-white border-r border-indigo-100 transition-all duration-300 shadow-sm flex flex-col',
+        'h-screen bg-white border-r border-indigo-100 transition-all duration-300 shadow-sm flex flex-col overflow-hidden',
         isExpanded ? 'w-64' : 'w-20'
       )}
     >
-      <div className="h-16 flex items-center justify-between px-4 border-b border-indigo-100">
-        {isExpanded ? (
-          <div className="flex items-center">
-            <Sun className="h-6 w-6 text-indigo-500 mr-2" />
-            <h2 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-green-500">Prakash Green</h2>
-          </div>
-        ) : (
-          <div className="flex w-full justify-center">
-            <div className="h-10 w-10 rounded-full bg-gradient-to-r from-indigo-500 to-green-500 text-white flex items-center justify-center">
-              <span className="text-lg font-bold">P</span>
-            </div>
-          </div>
-        )}
+      <div className="h-16 flex items-center px-4 border-b border-indigo-100 relative">
         <button
-          className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-indigo-50 text-indigo-500"
+          className="absolute top-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-600"
           onClick={toggleSidebar}
+          aria-label={isExpanded ? "Collapse sidebar" : "Expand sidebar"}
         >
           {isExpanded ? (
             <ChevronLeft className="h-5 w-5" />
@@ -156,9 +147,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
             <ChevronRight className="h-5 w-5" />
           )}
         </button>
+
+        {isExpanded ? (
+          <div className="flex items-center">
+            <Sun className="h-6 w-6 text-indigo-500 mr-2 flex-shrink-0" />
+            <h2 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-green-500 truncate">Prakash Green</h2>
+          </div>
+        ) : (
+          <div className="flex w-full justify-center">
+            <div className="h-10 w-10 rounded-full bg-gradient-to-r from-indigo-500 to-green-500 text-white flex items-center justify-center flex-shrink-0">
+              <span className="text-lg font-bold">P</span>
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="flex-1 overflow-auto py-2 px-3">
+      <div className="flex-1 overflow-y-auto py-2 px-3">
         <nav className="flex flex-col gap-1">
           {renderNavItems(mainNavItems)}
 
@@ -180,15 +184,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
             {isExpanded && (
               <>
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-gradient-to-r from-indigo-500 to-green-500 text-white flex items-center justify-center">
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-r from-indigo-500 to-green-500 text-white flex items-center justify-center flex-shrink-0">
                     <span className="text-sm font-medium">
-                      {userData?.displayName?.charAt(0).toUpperCase()}
+                      {userData?.displayName?.charAt(0)?.toUpperCase() || 'U'}
                     </span>
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">{userData?.displayName}</span>
-                    <span className="text-xs text-gray-500 capitalize">
-                      {userData?.role?.replace('_', ' ')}
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-medium truncate">{userData?.displayName || 'User'}</span>
+                    <span className="text-xs text-gray-500 capitalize truncate">
+                      {userData?.role?.replace('_', ' ') || 'Employee'}
                     </span>
                   </div>
                 </div>
@@ -201,7 +205,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
             onClick={handleLogout} 
             className="w-full gap-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:text-indigo-800 hover:border-indigo-300"
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="h-4 w-4 flex-shrink-0" />
             {isExpanded && <span>Logout</span>}
           </Button>
         </div>
@@ -215,6 +219,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       <button
         className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-md bg-white shadow-md text-indigo-600"
         onClick={toggleMobileSidebar}
+        aria-label="Toggle menu"
       >
         <Menu className="h-5 w-5" />
       </button>
@@ -229,25 +234,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
 
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 h-screen w-72 bg-white border-r border-indigo-100 shadow-xl transition-transform duration-300',
+          'fixed inset-y-0 left-0 z-50 h-screen w-72 bg-white border-r border-indigo-100 shadow-xl transition-transform duration-300 overflow-hidden',
           isMobileExpanded ? 'translate-x-0' : '-translate-x-full'
         )}
       >
         <div className="flex h-full flex-col">
-          <div className="flex h-16 items-center justify-between px-4 border-b border-indigo-100">
+          <div className="h-16 flex items-center justify-between px-4 border-b border-indigo-100">
             <div className="flex items-center">
-              <Sun className="h-6 w-6 text-indigo-500 mr-2" />
-              <h2 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-green-500">Prakash Green</h2>
+              <Sun className="h-6 w-6 text-indigo-500 mr-2 flex-shrink-0" />
+              <h2 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-green-500 truncate">Prakash Green</h2>
             </div>
             <button
               className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-indigo-50 text-indigo-500"
               onClick={() => setIsMobileExpanded(false)}
+              aria-label="Close menu"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
           </div>
 
-          <div className="flex-1 overflow-auto py-2 px-3">
+          <div className="flex-1 overflow-y-auto py-2 px-3">
             <nav className="flex flex-col gap-1">
               {renderNavItems(mainNavItems)}
 
@@ -267,15 +273,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-3 rounded-md py-1">
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-gradient-to-r from-indigo-500 to-green-500 text-white flex items-center justify-center">
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-r from-indigo-500 to-green-500 text-white flex items-center justify-center flex-shrink-0">
                     <span className="text-sm font-medium">
-                      {userData?.displayName?.charAt(0).toUpperCase()}
+                      {userData?.displayName?.charAt(0)?.toUpperCase() || 'U'}
                     </span>
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">{userData?.displayName}</span>
-                    <span className="text-xs text-gray-500 capitalize">
-                      {userData?.role?.replace('_', ' ')}
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-medium truncate">{userData?.displayName || 'User'}</span>
+                    <span className="text-xs text-gray-500 capitalize truncate">
+                      {userData?.role?.replace('_', ' ') || 'Employee'}
                     </span>
                   </div>
                 </div>
@@ -286,7 +292,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
                 onClick={handleLogout} 
                 className="w-full gap-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:text-indigo-800 hover:border-indigo-300"
               >
-                <LogOut className="h-4 w-4" />
+                <LogOut className="h-4 w-4 flex-shrink-0" />
                 <span>Logout</span>
               </Button>
             </div>

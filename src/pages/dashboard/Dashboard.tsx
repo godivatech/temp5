@@ -121,6 +121,7 @@ const Dashboard = () => {
       
       const customers = await getCustomers();
       const products = await getProducts();
+      const quotationsList = await getQuotations();
       let invoices = [];
       
       try {
@@ -131,7 +132,7 @@ const Dashboard = () => {
       
       setCustomerCount(customers.length);
       setProductCount(products.length);
-      setQuotationCount(quotations.length);
+      setQuotationCount(quotationsList.length);
       setInvoiceCount(invoices.length);
       
       toast.success('Dashboard data refreshed');
