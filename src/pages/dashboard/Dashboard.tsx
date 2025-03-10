@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { markAttendance, getCustomers, getProducts, getQuotations, getInvoices, ref, onValue, database } from '@/lib/firebase';
@@ -23,7 +22,6 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Progress } from '@/components/ui/progress';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-// Sample data for charts
 const salesData = [
   { name: 'Jan', value: 400 },
   { name: 'Feb', value: 300 },
@@ -34,7 +32,6 @@ const salesData = [
   { name: 'Jul', value: 1000 },
 ];
 
-// Tasks demo data
 const taskData = [
   { id: 1, title: 'Follow up with Client A', status: 'pending', dueDate: '2023-05-15' },
   { id: 2, title: 'Prepare quotation for Project B', status: 'completed', dueDate: '2023-05-10' },
@@ -56,9 +53,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up real-time data fetching
     const fetchRealTimeData = () => {
-      // Get customers in real-time
       const customersRef = ref(database, 'customers');
       const unsubscribeCustomers = onValue(customersRef, (snapshot) => {
         if (snapshot.exists()) {
@@ -71,7 +66,6 @@ const Dashboard = () => {
         console.error('Error fetching customers:', error);
       });
 
-      // Get products in real-time
       const productsRef = ref(database, 'products');
       const unsubscribeProducts = onValue(productsRef, (snapshot) => {
         if (snapshot.exists()) {
@@ -84,7 +78,6 @@ const Dashboard = () => {
         console.error('Error fetching products:', error);
       });
 
-      // Get quotations in real-time
       const quotationsRef = ref(database, 'quotations');
       const unsubscribeQuotations = onValue(quotationsRef, (snapshot) => {
         if (snapshot.exists()) {
@@ -97,7 +90,6 @@ const Dashboard = () => {
         console.error('Error fetching quotations:', error);
       });
 
-      // Get invoices in real-time
       const invoicesRef = ref(database, 'invoices');
       const unsubscribeInvoices = onValue(invoicesRef, (snapshot) => {
         if (snapshot.exists()) {
@@ -112,7 +104,6 @@ const Dashboard = () => {
 
       setIsLoading(false);
 
-      // Clean up subscriptions on unmount
       return () => {
         unsubscribeCustomers();
         unsubscribeProducts();
@@ -128,10 +119,8 @@ const Dashboard = () => {
     try {
       setRefreshing(true);
       
-      // Fetch data manually (useful for ensuring we have the latest data)
       const customers = await getCustomers();
       const products = await getProducts();
-      const quotations = await getQuotations();
       let invoices = [];
       
       try {
@@ -165,7 +154,6 @@ const Dashboard = () => {
     toast.success(`Task ${task?.status === 'completed' ? 'marked as pending' : 'completed'}`);
   };
   
-  // Calculate completion percentage
   const completionPercentage = Math.round(
     (tasks.filter(t => t.status === 'completed').length / tasks.length) * 100
   );
@@ -402,7 +390,7 @@ const Dashboard = () => {
                       <span className="text-sm font-medium">Solar Panels</span>
                       <span className="text-sm text-gray-500">65%</span>
                     </div>
-                    <Progress value={65} className="h-2 bg-blue-100" indicatorClassName="bg-blue-600" />
+                    <Progress value={65} className="h-2 bg-blue-100" />
                   </div>
                   
                   <div>
@@ -410,7 +398,7 @@ const Dashboard = () => {
                       <span className="text-sm font-medium">Inverters</span>
                       <span className="text-sm text-gray-500">20%</span>
                     </div>
-                    <Progress value={20} className="h-2 bg-green-100" indicatorClassName="bg-green-600" />
+                    <Progress value={20} className="h-2 bg-green-100" />
                   </div>
                   
                   <div>
@@ -418,7 +406,7 @@ const Dashboard = () => {
                       <span className="text-sm font-medium">Batteries</span>
                       <span className="text-sm text-gray-500">10%</span>
                     </div>
-                    <Progress value={10} className="h-2 bg-yellow-100" indicatorClassName="bg-yellow-600" />
+                    <Progress value={10} className="h-2 bg-yellow-100" />
                   </div>
                   
                   <div>
@@ -426,7 +414,7 @@ const Dashboard = () => {
                       <span className="text-sm font-medium">Installation</span>
                       <span className="text-sm text-gray-500">5%</span>
                     </div>
-                    <Progress value={5} className="h-2 bg-purple-100" indicatorClassName="bg-purple-600" />
+                    <Progress value={5} className="h-2 bg-purple-100" />
                   </div>
                 </div>
               </CardContent>

@@ -106,8 +106,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         to={item.path}
         className={({ isActive }) =>
           cn(
-            'sidebar-item group',
-            isActive && 'active'
+            'sidebar-item group flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-indigo-50',
+            isActive ? 'bg-indigo-100 text-indigo-900' : 'text-gray-600 hover:text-indigo-900'
           )
         }
         onClick={isMobile ? () => setIsMobileExpanded(false) : undefined}
@@ -133,7 +133,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         isExpanded ? 'w-64' : 'w-20'
       )}
     >
-      <div className="h-16 flex items-center px-4 border-b border-indigo-100">
+      <div className="h-16 flex items-center justify-between px-4 border-b border-indigo-100">
         {isExpanded ? (
           <div className="flex items-center">
             <Sun className="h-6 w-6 text-indigo-500 mr-2" />
@@ -146,6 +146,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
             </div>
           </div>
         )}
+        <button
+          className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-indigo-50 text-indigo-500"
+          onClick={toggleSidebar}
+        >
+          {isExpanded ? (
+            <ChevronLeft className="h-5 w-5" />
+          ) : (
+            <ChevronRight className="h-5 w-5" />
+          )}
+        </button>
       </div>
 
       <div className="flex-1 overflow-auto py-2 px-3">
@@ -184,16 +194,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
                 </div>
               </>
             )}
-            <button
-              className="ml-auto flex h-8 w-8 items-center justify-center rounded-md hover:bg-indigo-50 text-indigo-500"
-              onClick={toggleSidebar}
-            >
-              {isExpanded ? (
-                <ChevronLeft className="h-5 w-5" />
-              ) : (
-                <ChevronRight className="h-5 w-5" />
-              )}
-            </button>
           </div>
           <Button 
             variant="outline" 

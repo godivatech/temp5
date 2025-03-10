@@ -185,25 +185,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             {children}
           </div>
         </main>
-        
-        {/* Quick help tooltip that appears in the corner */}
-        <div className="fixed bottom-4 right-4 z-50">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  className="h-10 w-10 rounded-full bg-indigo-600 hover:bg-indigo-700 shadow-lg"
-                  onClick={() => toast.info('Help system will be implemented in future updates!')}
-                >
-                  <span className="text-lg font-bold">?</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="left">
-                <p>Need help?</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
       </div>
     </div>
   );
