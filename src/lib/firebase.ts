@@ -1,3 +1,4 @@
+
 import { initializeApp } from 'firebase/app';
 import { 
   getAuth, 
@@ -91,14 +92,13 @@ export interface QuotationItem {
 
 export interface Quotation {
   id?: string;
-  customerId?: string;
-  customerName?: string;
-  items?: QuotationItem[];
-  totalAmount?: number;
-  status?: 'draft' | 'sent' | 'accepted' | 'rejected';
-  createdAt?: string | number;
-  createdBy?: string;
-  notes?: string;
+  customerId: string;
+  customerName: string;
+  items: QuotationItem[];
+  totalAmount: number;
+  createdAt: number;
+  createdBy: string;
+  status: 'draft' | 'sent' | 'accepted' | 'rejected';
 }
 
 // Invoice type
@@ -611,23 +611,24 @@ export const getQuotationById = async (quotationId: string) => {
 };
 
 // Database functions for invoices
-export const addInvoice = async (invoiceData: any) => {
+export const createInvoice = async (invoice: Omit<Invoice, 'id' | 'createdAt' | 'createdBy'>) => {
   try {
+    const user = auth.currentUser;
+    if (!user) throw new Error("User not authenticated");
+    
     const invoicesRef = ref(database, 'invoices');
     const newInvoiceRef = push(invoicesRef);
     
-    // Add ID to the invoice data
-    const invoiceWithId = {
-      ...invoiceData,
-      id: newInvoiceRef.key,
+    const newInvoice: Invoice = {
+      ...invoice,
+      createdAt: Date.now(),
+      createdBy: user.uid,
     };
     
-    // Save the invoice
-    await set(newInvoiceRef, invoiceWithId);
-    
-    return invoiceWithId;
+    await set(newInvoiceRef, newInvoice);
+    return { id: newInvoiceRef.key, ...newInvoice };
   } catch (error) {
-    console.error('Error adding invoice:', error);
+    console.error("Error creating invoice:", error);
     throw error;
   }
 };

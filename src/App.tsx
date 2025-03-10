@@ -18,7 +18,6 @@ import Customers from "./pages/dashboard/Customers";
 import Products from "./pages/dashboard/Products";
 import Quotations from "./pages/dashboard/Quotations";
 import Invoices from "./pages/dashboard/Invoices";
-import CreateInvoice from "./pages/dashboard/invoices/CreateInvoice";
 import UserManagement from "./pages/dashboard/UserManagement";
 import Attendance from "./pages/dashboard/Attendance";
 
@@ -120,13 +119,9 @@ const App = () => {
               
               <Route path="/dashboard/invoices" element={
                 <ProtectedRoute>
-                  <Invoices />
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/dashboard/invoices/create" element={
-                <ProtectedRoute>
-                  <CreateInvoice />
+                  <RoleRoute allowedRoles={['master_admin', 'admin']}>
+                    <Invoices />
+                  </RoleRoute>
                 </ProtectedRoute>
               } />
               
